@@ -1,0 +1,69 @@
+plugins {
+    id "java"
+    id "java-library"
+    id "maven-publish"
+    id "edu.wpi.first.GradleRIO" version "2024.3.2"
+}
+
+def javaVersion = JavaVersion.VERSION_17
+
+java {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+
+    withSourcesJar()
+}
+
+dependencies {
+    implementation wpi.java.deps.wpilib()
+    implementation wpi.java.vendor.java()
+
+    testImplementation platform("org.junit:junit-bom:5.10.1")
+    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testImplementation "org.junit.jupiter:junit-jupiter-params"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+}
+
+test{
+    useJUnitPlatform()
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+}
+
+tasks.withType(JavaCompile) {
+    // Configure string concat to always inline compile
+    options.compilerArgs.add '-XDstringConcat=inline'
+}
+
+publishing {
+    publications {
+        robotCommon(MavenPublication) {
+            groupId = 'flingBotTech'
+            artifactId = 'botsnax'
+            version = '0.1'
+
+            pom {
+                name = 'Botsnax'
+                description = 'A library built on wpilib for programming FRC robots'
+            }
+
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'buildMaven'
+            url = layout.buildDirectory.dir("repo")
+        }
+
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/flingbottech/botsnax")
+
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.token") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+}
