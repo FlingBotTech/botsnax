@@ -1,7 +1,9 @@
 package botsnax.system;
 
+import edu.wpi.first.units.measure.Voltage;
+
 public interface VoltageActuator {
-    void setVoltage(double voltage);
-    double getVoltage();
+    void setVoltage(Voltage voltage);
+    Voltage getVoltage();
     void stop();
 }

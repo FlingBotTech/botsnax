@@ -1,8 +1,8 @@
 package botsnax.system.motor;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 public class GearedMotorSystem implements MotorSystem {
     private final MotorSystem motor;
@@ -29,17 +29,17 @@ public class GearedMotorSystem implements MotorSystem {
     }
 
     @Override
-    public Measure<Angle> getAngle() {
-        return motor.getAngle().divide(gearRatio);
+    public Angle getAngle() {
+        return motor.getAngle().div(gearRatio);
     }
 
     @Override
-    public Measure<Velocity<Angle>> getVelocity() {
-        return motor.getVelocity().divide(gearRatio);
+    public AngularVelocity getVelocity() {
+        return motor.getVelocity().div(gearRatio);
     }
 
     @Override
-    public void setAngle(Measure<Angle> angle) {
+    public void setAngle(Angle angle) {
         motor.setAngle(angle.times(gearRatio));
     }
 
@@ -49,12 +49,12 @@ public class GearedMotorSystem implements MotorSystem {
     }
 
     @Override
-    public double getVoltage() {
+    public Voltage getVoltage() {
         return motor.getVoltage();
     }
 
     @Override
-    public void setVoltage(double voltage) {
+    public void setVoltage(Voltage voltage) {
         motor.setVoltage(voltage);
     }
 }

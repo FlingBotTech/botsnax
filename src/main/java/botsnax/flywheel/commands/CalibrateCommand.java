@@ -1,6 +1,8 @@
 package botsnax.flywheel.commands;
 
 import edu.wpi.first.units.BaseUnits;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -22,27 +24,27 @@ public class CalibrateCommand extends SequentialCommandGroup {
     private final VelocityCalibrationData data = new VelocityCalibrationData();
     private final Subsystem subsystem;
 
-    public CalibrateCommand(Flywheel flywheel, double maxVoltage, Consumer<VelocityCalibration> consumer, Subsystem subsystem) {
+    public CalibrateCommand(Flywheel flywheel, Voltage maxVoltage, Consumer<VelocityCalibration> consumer, Subsystem subsystem) {
         this.flywheel = flywheel;
         this.subsystem = subsystem;
 
         for (int i = 1; i <= NUM_INCREMENTS; i++) {
             double percentage = (double) i / (NUM_INCREMENTS + 1);
-            addCommands(testVoltageCommand(maxVoltage * percentage));
+            addCommands(testVoltageCommand(maxVoltage.times(percentage)));
         }
 
         addCommands(subsystem.runOnce(flywheel::stop));
         addCommands(new InstantCommand(() -> consumer.accept(data.solve())));
     }
 
-    private Command testVoltageCommand(double voltage) {
+    private Command testVoltageCommand(Voltage voltage) {
         return subsystem
                 .runOnce(() -> flywheel.setVoltage(voltage))
                 .andThen(new AwaitStableValueCommand(
                                 Seconds.of(2),
                                 RadiansPerSecond.of(0.05).baseUnitMagnitude(),
                                 () -> flywheel.getVelocity().baseUnitMagnitude(),
-                                value -> data.add((BaseUnits.Angle.per(BaseUnits.Time)).of(value), voltage),
+                                value -> data.add(BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(value), voltage),
                                 subsystem
                         ));
     }

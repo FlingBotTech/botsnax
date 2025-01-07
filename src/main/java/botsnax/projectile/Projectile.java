@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 
@@ -18,7 +19,7 @@ import static java.lang.Math.*;
 import static java.lang.Math.max;
 
 public class Projectile implements Sendable {
-    private static final Measure<Velocity<Velocity<Distance>>> G = MetersPerSecondPerSecond.of(9.807);
+    private static final LinearAcceleration G = MetersPerSecondPerSecond.of(9.807);
 
     private Translation3d initialPosition;
     private Translation3d initialVelocity;
@@ -70,37 +71,37 @@ public class Projectile implements Sendable {
         }
     }
 
-    public Optional<Measure<Distance>> proximityToTargetIfAny(Vector<N3> target, Vector<N3> normal) {
+    public Optional<Distance> proximityToTargetIfAny(Vector<N3> target, Vector<N3> normal) {
         return timeOfIntersectionIfAny(target, normal).map(timeOfIntersection -> {
             Vector<N3> pointOfIntersection = atTime(timeOfIntersection);
-            return BaseUnits.Distance.of(pointOfIntersection.minus(target).norm());
+            return BaseUnits.DistanceUnit.of(pointOfIntersection.minus(target).norm());
         });
     }
 
-    public Optional<Measure<Distance>> proximityToTargetIfAny(Vector<N3> target) {
+    public Optional<Distance> proximityToTargetIfAny(Vector<N3> target) {
         return proximityToTargetIfAny(target, initialVelocity.toVector());
     }
 
-    public Optional<Measure<Time>> timeOfIntersectionIfAny(Vector<N3> target, Vector<N3> normal) {
+    public Optional<Time> timeOfIntersectionIfAny(Vector<N3> target, Vector<N3> normal) {
         double a = normal.dot(getSquareCoefficient());
         double b = normal.dot(initialVelocity.toVector());
         double c = normal.dot(initialPosition.toVector().minus(target));
         double t = getMinPositiveRoot(a, b, c);
 
         if (!Double.isNaN(t)) {
-            return Optional.of(BaseUnits.Time.of(t));
+            return Optional.of(BaseUnits.TimeUnit.of(t));
         } else {
             return Optional.empty();
         }
     }
 
-    public Vector<N3> atTime(Measure<Time> t) {
+    public Vector<N3> atTime(Time t) {
         return getSquareCoefficient().times(Math.pow(t.baseUnitMagnitude(), 2))
                 .plus(initialVelocity.toVector().times(t.baseUnitMagnitude()))
                 .plus(initialPosition.toVector());
     }
 
-    private Optional<Measure<Time>> getFlightTime() {
+    private Optional<Time> getFlightTime() {
         return timeOfIntersectionIfAny(new Vector<>(N3.instance), new Translation3d(0, 0, 1).toVector());
     }
 
@@ -108,10 +109,10 @@ public class Projectile implements Sendable {
         return new Translation3d(0, 0, -0.5 * G.baseUnitMagnitude()).toVector();
     }
 
-    private Optional<Measure<Distance>> getFlightDistance() {
+    private Optional<Distance> getFlightDistance() {
         return getFlightTime().map(time -> {
             Vector<N3> collision = atTime(time);
-            return BaseUnits.Distance.of(initialPosition.toVector().minus(collision).norm());
+            return BaseUnits.DistanceUnit.of(initialPosition.toVector().minus(collision).norm());
         });
     }
 
@@ -121,7 +122,7 @@ public class Projectile implements Sendable {
                 .plus(new Translation3d(robotPose.getX(), robotPose.getY(), 0));
     }
 
-    public static Measure<Angle> getBallisticAngle(Translation2d target, Measure<Velocity<Distance>> speed) {
+    public static Angle getBallisticAngle(Translation2d target, LinearVelocity speed) {
         double a = (-G.baseUnitMagnitude() * target.getX()) / (2 * pow(speed.baseUnitMagnitude(), 2));
         double b = 1.0;
         double c = a - (target.getY() / target.getX());

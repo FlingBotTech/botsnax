@@ -2,8 +2,8 @@ package botsnax.arm.commands.calibrate;
 
 import botsnax.arm.commands.AwaitStabilityCommand;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -19,16 +19,16 @@ import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.pow;
 
 public class CalibrateGearRatioCommand extends SequentialCommandGroup {
-    private static final Measure<Angle> ERROR_TO_APPLY_MAXIMUM_VOLTAGE = ofRelativeUnits(10, Degrees);
+    private static final Angle ERROR_TO_APPLY_MAXIMUM_VOLTAGE = Degrees.of(10);
 
-    public CalibrateGearRatioCommand(ArmCalibrationParams arm, double maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
+    public CalibrateGearRatioCommand(ArmCalibrationParams arm, Voltage maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
         addCommands(
                 new InstantCommand(arm::zeroPositions, arm.requirements()),
                 goToAngle(arm, ERROR_TO_APPLY_MAXIMUM_VOLTAGE, maxVoltage, calibrationConsumer)
         );
     }
 
-    private Command goToAngle(ArmCalibrationParams arm, Measure<Angle> endAngle, double maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
+    private Command goToAngle(ArmCalibrationParams arm, Angle endAngle, Voltage maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
         MotorController controller = createSCurveController(Degrees.of(0), endAngle, maxVoltage);
         return new AwaitStabilityCommand(arm, controller, result -> {
             double gearRatio = result.motorAngle().in(Radians) / result.angle().in(Radians);
@@ -43,16 +43,16 @@ public class CalibrateGearRatioCommand extends SequentialCommandGroup {
         return new ArmCalibration(
                 new ArmGravityController(result.voltage(), result.angle()),
                 gearRatio,
-                new VelocityCalibration(estimatedVelocityToVoltageSlope, 0),
-                new VelocityCalibration(estimatedVelocityToVoltageSlope, 0)
+                new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0)),
+                new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0))
         );
     }
 
-    private MotorController createSCurveController(Measure<Angle> startAngle, Measure<Angle> endAngle,double maxVoltage) {
+    private MotorController createSCurveController(Angle startAngle, Angle endAngle, Voltage maxVoltage) {
         return MotorControllerFactory.createSCurveController(
                 startAngle,
                 endAngle,
-                ofRelativeUnits(5, DegreesPerSecond),
+                DegreesPerSecond.of(5),
                 ProportionalSetpointController.create(maxVoltage, ERROR_TO_APPLY_MAXIMUM_VOLTAGE)
         );
     }

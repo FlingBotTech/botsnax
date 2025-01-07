@@ -1,8 +1,9 @@
 package botsnax.swerve.phoenix.request;
 
 import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import botsnax.swerve.sim.SwerveSim;
 
 public class PerfectOdometryRequest implements SwerveRequest {
@@ -15,7 +16,7 @@ public class PerfectOdometryRequest implements SwerveRequest {
     }
 
     @Override
-    public StatusCode apply(SwerveControlRequestParameters parameters, SwerveModule... modulesToApply) {
+    public StatusCode apply(SwerveDrivetrain.SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         parameters.currentPose = swerveSim.getPose();
         return request.apply(parameters, modulesToApply);
     }

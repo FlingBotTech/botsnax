@@ -3,6 +3,9 @@ package botsnax.arm.commands;
 import botsnax.arm.commands.calibrate.ArmCalibrationParams;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import botsnax.control.MotorController;
 import botsnax.system.motor.MotorState;
@@ -16,11 +19,11 @@ import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.abs;
 
 public class AwaitStabilityCommand extends Command {
-    public record Result(Measure<Angle> angle, Measure<Angle> motorAngle, double voltage) {
+    public record Result(Angle angle, Angle motorAngle, Voltage voltage) {
     }
 
-    private static final Measure<Time> minPhaseTime = Seconds.of(2);
-    private static final Measure<Angle> stabilityThreshold = Degrees.of(0.02);
+    private static final Time minPhaseTime = Seconds.of(2);
+    private static final Angle stabilityThreshold = Degrees.of(0.02);
 
     private final ArmCalibrationParams arm;
     private final LinearFilter longAverageFilter;
@@ -31,7 +34,7 @@ public class AwaitStabilityCommand extends Command {
     private MotorController motorController;
     private final Consumer<Result> consumer;
 
-    private Measure<Time> startTime;
+    private Time startTime;
     private Result result;
 
     public AwaitStabilityCommand(ArmCalibrationParams arm, Supplier<MotorController> controllerSupplier, Consumer<Result> consumer) {
@@ -52,7 +55,7 @@ public class AwaitStabilityCommand extends Command {
         this(arm, () -> controller, consumer);
     }
 
-    private static Measure<Time> getTime() {
+    private static Time getTime() {
         return Microseconds.of(getFPGATime());
     }
 
@@ -64,10 +67,10 @@ public class AwaitStabilityCommand extends Command {
 
     @Override
     public void execute() {
-        Measure<Time> time = getTime().minus(startTime);
+        Time time = getTime().minus(startTime);
         MotorState motorState = arm.getMotorState(time);
         MotorState encoderState = arm.getEncoderState(time);
-        double voltage = motorController.calculate(encoderState);
+        Voltage voltage = motorController.calculate(encoderState);
 
         arm.setVoltage(voltage);
 
@@ -75,7 +78,7 @@ public class AwaitStabilityCommand extends Command {
         double motorAngle = motorState.getAngle().baseUnitMagnitude();
         double shortAverage = shortAverageFilter.calculate(angle);
         double longAverage = longAverageFilter.calculate(angle);
-        double voltageAverage = voltageAverageFilter.calculate(voltage);
+        double voltageAverage = voltageAverageFilter.calculate(voltage.baseUnitMagnitude());
         double motorAngleAverage = motorAngleFilter.calculate(motorAngle);
 
         if (time.gt(minPhaseTime)) {
@@ -83,9 +86,9 @@ public class AwaitStabilityCommand extends Command {
 
             if (isStable) {
                 result = new Result(
-                        BaseUnits.Angle.of(shortAverage),
-                        BaseUnits.Angle.of(motorAngleAverage),
-                        voltageAverage);
+                        BaseUnits.AngleUnit.of(shortAverage),
+                        BaseUnits.AngleUnit.of(motorAngleAverage),
+                        BaseUnits.VoltageUnit.of(voltageAverage));
             }
         }
     }

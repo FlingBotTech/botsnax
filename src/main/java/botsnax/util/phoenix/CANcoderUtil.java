@@ -5,8 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfigurator;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Preferences;
 
 import java.util.Optional;
@@ -25,12 +24,12 @@ public class CANcoderUtil {
         return configs;
     }
 
-    private static StatusSignal<Double> getSignal(StatusSignal<Double> signal) {
-        StatusSignal<Double> refreshed = signal.waitForUpdate(1, true);
+    private static StatusSignal<Angle> getSignal(StatusSignal<Angle> signal) {
+        StatusSignal<Angle> refreshed = signal.waitForUpdate(1, true);
         return refreshed;
     }
 
-    public static Measure<Angle> getOffset(CANcoder cancoder) {
+    public static Angle getOffset(CANcoder cancoder) {
         return Rotations.of(getConfig(cancoder).MagnetOffset);
     }
 
@@ -48,16 +47,16 @@ public class CANcoderUtil {
         }
     }
 
-    public static double getOffsetToZeroCurrentPosition(CANcoder cancoder) {
-        double position = getSignal(cancoder.getPosition()).getValue();
+    public static Angle getOffsetToZeroCurrentPosition(CANcoder cancoder) {
+        Angle position = getSignal(cancoder.getPosition()).getValue();
         MagnetSensorConfigs config = getConfig(cancoder);
-        double netPosition = position - config.MagnetOffset;
+        Angle netPosition = position.minus(Rotations.of(config.MagnetOffset));
 
-        return -netPosition;
+        return netPosition.times(-1);
     }
 
     public static void saveOffsetToZeroCurrentPosition(String name, CANcoder cancoder) {
-        double offset = getOffsetToZeroCurrentPosition(cancoder);
+        double offset = getOffsetToZeroCurrentPosition(cancoder).in(Rotations);
         Preferences.setDouble(name, offset);
     }
 

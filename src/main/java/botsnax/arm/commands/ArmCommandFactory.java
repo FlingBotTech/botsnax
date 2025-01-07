@@ -2,9 +2,7 @@ package botsnax.arm.commands;
 
 import botsnax.arm.commands.calibrate.ArmCalibrationParams;
 import botsnax.arm.commands.calibrate.CalibrateCommand;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -15,6 +13,7 @@ import botsnax.control.ReactionTimeVelocityController;
 import botsnax.control.SetpointVelocityController;
 import botsnax.system.motor.MotorSystem;
 import botsnax.system.Gearbox;
+import edu.wpi.first.units.measure.Angle;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,13 +26,13 @@ public class ArmCommandFactory {
     private final ArmKinematics kinematics;
     private final Subsystem subsystem;
     private final MotorSystem motor;
-    private final Consumer<Measure<Angle>> setpointObserver;
+    private final Consumer<Angle> setpointObserver;
 
     public ArmCommandFactory(
             ArmCalibrationParams calibrationParams,
             Gearbox gearbox,
             ArmKinematics kinematics,
-            Consumer<Measure<Angle>> setpointObserver,
+            Consumer<Angle> setpointObserver,
             Subsystem subsystem) {
         this.calibrationParams = calibrationParams;
         this.gearbox = gearbox;
@@ -47,26 +46,26 @@ public class ArmCommandFactory {
         motor.setAngle(gearbox.getOutputEncoder().getAngle());
     }
 
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return motor.getAngle();
     }
 
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return motor.getVelocity();
     }
 
-    public Measure<Angle> getAngleRelativeToLevel() {
+    public Angle getAngleRelativeToLevel() {
         return getAngle().minus(kinematics.getHorizontalAngle());
     }
 
-    public void setEncoderAngle(Measure<Angle> angle) {
+    public void setEncoderAngle(Angle angle) {
         gearbox.getOutputEncoder().setAngle(angle);
     }
 
     public Command calibrate() {
         return new CalibrateCommand(
                 calibrationParams,
-                12.0,
+                Volts.of(12.0),
                 calibration -> {
                     calibration.save(subsystem.getName());
                     System.out.println(calibration);
@@ -75,13 +74,13 @@ public class ArmCommandFactory {
                 subsystem);
     }
 
-    public Command moveUp(Measure<Velocity<Angle>> velocity, Measure<Angle> maxAngle) {
+    public Command moveUp(AngularVelocity velocity, Angle maxAngle) {
         return runController(state -> velocity)
                 .until(() -> motor.getAngle().gte(maxAngle))
                 .andThen(holdCurrentAngle());
     }
 
-    public Command moveDown(Measure<Velocity<Angle>> velocity) {
+    public Command moveDown(AngularVelocity velocity) {
         return runController(state -> velocity)
                 .until(() -> motor.getAngle().lte(Degrees.of(5)))
                 .andThen(park());
@@ -89,7 +88,7 @@ public class ArmCommandFactory {
 
     public Command holdCurrentAngle() {
         return new InstantCommand(() -> {
-            Measure<Angle> angle = motor.getAngle();
+            Angle angle = motor.getAngle();
 
             if (angle.gt(Degrees.of(5))) {
                 goToAngle(() -> angle).schedule();
@@ -107,10 +106,10 @@ public class ArmCommandFactory {
                 .andThen(new InstantCommand(motor::stop, subsystem));
     }
 
-    public Command goToAngle(Supplier<Measure<Angle>> angleSupplier) {
+    public Command goToAngle(Supplier<Angle> angleSupplier) {
         return runController(SetpointVelocityController.ofProfile(
                         state -> {
-                            Measure<Angle> angle = angleSupplier.get();
+                            Angle angle = angleSupplier.get();
                             setpointObserver.accept(angle);
                             return angle;
                         },
@@ -129,7 +128,7 @@ public class ArmCommandFactory {
                 subsystem);
     }
 
-    public Command goToAngleRelativeToLevel(Supplier<Measure<Angle>> angleSupplier) {
+    public Command goToAngleRelativeToLevel(Supplier<Angle> angleSupplier) {
         return goToAngle(() -> angleSupplier.get().plus(kinematics.getHorizontalAngle()));
     }
 }

@@ -1,20 +1,22 @@
 package botsnax.arm.commands;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import botsnax.control.MotorKinematics;
 import botsnax.system.motor.MotorState;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
+
+import static edu.wpi.first.units.Units.Volts;
 
 public interface ArmKinematics extends MotorKinematics {
     double getGearRatio();
-    Measure<Angle> getHorizontalAngle();
+    Angle getHorizontalAngle();
 
     public static class Stub implements ArmKinematics {
         private final double gearRatio;
-        private final Measure<Angle> horizontalAngle;
+        private final Angle horizontalAngle;
 
-        public Stub(double gearRatio, Measure<Angle> horizontalAngle) {
+        public Stub(double gearRatio, Angle horizontalAngle) {
             this.gearRatio = gearRatio;
             this.horizontalAngle = horizontalAngle;
         }
@@ -25,13 +27,13 @@ public interface ArmKinematics extends MotorKinematics {
         }
 
         @Override
-        public Measure<Angle> getHorizontalAngle() {
+        public Angle getHorizontalAngle() {
             return horizontalAngle;
         }
 
         @Override
-        public double getVoltageForVelocity(Measure<Velocity<Angle>> velocity, MotorState state) {
-            return 0;
+        public Voltage getVoltageForVelocity(AngularVelocity velocity, MotorState state) {
+            return Volts.of(0);
         }
     }
 }

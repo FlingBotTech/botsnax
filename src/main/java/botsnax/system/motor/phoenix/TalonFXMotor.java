@@ -1,23 +1,19 @@
 package botsnax.system.motor.phoenix;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Unit;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.wpilibj.RobotBase;
 import botsnax.system.motor.MotorSystem;
 import botsnax.util.phoenix.PhoenixUtil;
-
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Second;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.RobotBase;
 
 public class TalonFXMotor implements MotorSystem {
-    private static final Unit<Angle> ANGLE_UNITS = Rotations;
-    private static final Unit<Velocity<Angle>> VELOCITY_UNITS = ANGLE_UNITS.per(Second);
-
     private final TalonFX motor;
     private final double invert;
 
@@ -25,16 +21,40 @@ public class TalonFXMotor implements MotorSystem {
         this.motor = motor;
 
         if (RobotBase.isSimulation()) {
-            motor.setInverted(inverted);
+            setInverted(inverted);
         }
 
-        boolean motorInverted = motor.getInverted();
+        boolean motorInverted = getInverted();
 
         if (inverted != motorInverted) {
             System.err.println("WARNING: TalonFX " + motor.getDeviceID() + " inversion config does not match code. Emulating inversion.");
         }
 
         this.invert = (inverted != motorInverted) ? -1 : 1;
+    }
+
+    private void setInverted(boolean inverted) {
+        MotorOutputConfigs configs = new MotorOutputConfigs();
+
+        throwFail(motor.getConfigurator().refresh(configs), "get configuration");
+        configs.Inverted = inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        throwFail(motor.getConfigurator().apply(configs), "set inverted");
+    }
+
+    private boolean getInverted() {
+        MotorOutputConfigs configs = new MotorOutputConfigs();
+
+        throwFail(motor.getConfigurator().refresh(configs), "get configuration");
+
+        return configs.Inverted == InvertedValue.Clockwise_Positive;
+    }
+
+    private void throwFail(StatusCode statusCode, String operation) {
+        if (!statusCode.isOK()) {
+            String message = "Unable to " + operation + " on TalonFX ID " + motor.getDeviceID() + ": " + statusCode;
+            System.err.println(message);
+            throw new RuntimeException(message);
+        }
     }
 
     public TalonFX get() {
@@ -61,23 +81,23 @@ public class TalonFXMotor implements MotorSystem {
     }
 
     @Override
-    public Measure<Angle> getAngle() {
-        return ANGLE_UNITS.of(motor.getRotorPosition().getValue()).times(invert);
+    public Angle getAngle() {
+        return motor.getRotorPosition().getValue().times(invert);
     }
 
     @Override
-    public Measure<Velocity<Angle>> getVelocity() {
-        return VELOCITY_UNITS.of(motor.getRotorVelocity().getValue()).times(invert);
+    public AngularVelocity getVelocity() {
+        return motor.getRotorVelocity().getValue().times(invert);
     }
 
     @Override
-    public double getVoltage() {
-        return motor.getMotorVoltage().getValue() * invert;
+    public Voltage getVoltage() {
+        return motor.getMotorVoltage().getValue().times(invert);
     }
 
     @Override
-    public void setVoltage(double voltage) {
-        motor.setVoltage(voltage * invert);
+    public void setVoltage(Voltage voltage) {
+        motor.setVoltage(voltage.times(invert).baseUnitMagnitude());
     }
 
     @Override
@@ -86,7 +106,7 @@ public class TalonFXMotor implements MotorSystem {
     }
 
     @Override
-    public void setAngle(Measure<Angle> angle) {
+    public void setAngle(Angle angle) {
         PhoenixUtil.setAndValidatePosition(motor, angle.times(invert));
     }
 }

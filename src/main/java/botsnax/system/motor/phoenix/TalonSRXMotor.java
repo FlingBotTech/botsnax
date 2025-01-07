@@ -2,16 +2,15 @@ package botsnax.system.motor.phoenix;
 
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import botsnax.system.Gearbox;
 import botsnax.system.encoder.phoenix.TalonSRXAbsoluteEncoder;
 import botsnax.system.motor.AngleSetter;
 import botsnax.system.motor.MotorSystem;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.*;
 
 public class TalonSRXMotor implements MotorSystem {
     private static final double ENCODER_RESOLUTION = 4096.0;
@@ -55,13 +54,13 @@ public class TalonSRXMotor implements MotorSystem {
     }
 
     @Override
-    public void setVoltage(double voltage) {
-        motor.set(TalonSRXControlMode.PercentOutput, Math.min(1.0, 12.0 / motor.getBusVoltage() * voltage));
+    public void setVoltage(Voltage voltage) {
+        motor.set(TalonSRXControlMode.PercentOutput, Math.min(1.0, 12.0 / motor.getBusVoltage() * voltage.baseUnitMagnitude()));
     }
 
     @Override
-    public double getVoltage() {
-        return motor.getMotorOutputVoltage();
+    public Voltage getVoltage() {
+        return Volts.of(motor.getMotorOutputVoltage());
     }
 
     @Override
@@ -70,7 +69,7 @@ public class TalonSRXMotor implements MotorSystem {
     }
 
     @Override
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return Rotations.of(motor.getSelectedSensorPosition(PRIMARY_CLOSED_LOOP_INDEX) / ENCODER_RESOLUTION);
     }
 
@@ -78,25 +77,25 @@ public class TalonSRXMotor implements MotorSystem {
         return motor.getSensorCollection().getPulseWidthPosition();
     }
 
-    public Measure<Angle> getOffset() {
+    public Angle getOffset() {
         return Rotations.of(offset / ENCODER_RESOLUTION);
     }
 
-    public Measure<Angle> getAbsoluteAngle() {
+    public Angle getAbsoluteAngle() {
         return Rotations.of((getAbsolutePosition() - offset) / ENCODER_RESOLUTION);
     }
 
-    public void setAbsoluteAngle(Measure<Angle> angle) {
+    public void setAbsoluteAngle(Angle angle) {
         offset = getAbsolutePosition() - (angle.in(Rotations) * ENCODER_RESOLUTION);
     }
 
     @Override
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return RotationsPerSecond.of(motor.getSelectedSensorVelocity(PRIMARY_CLOSED_LOOP_INDEX) / ENCODER_RESOLUTION * VELOCITY_TIME_UNITS_PER_SECOND);
     }
 
     @Override
-    public void setAngle(Measure<Angle> angle) {
+    public void setAngle(Angle angle) {
         motor.setSelectedSensorPosition(angle.in(Rotations) * ENCODER_RESOLUTION, PRIMARY_CLOSED_LOOP_INDEX, 0);
     }
 

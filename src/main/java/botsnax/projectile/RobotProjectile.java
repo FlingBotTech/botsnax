@@ -6,9 +6,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 
@@ -33,7 +31,7 @@ public class RobotProjectile implements Sendable {
         return new Translation3d(t.getX(), t.getY(), 0);
     }
 
-    private Translation3d getReleaseVelocity(Measure<Velocity<Distance>> projectileSpeed, Pose2d position, Translation3d releasePosition, Translation3d robotReleaseDirection, ChassisSpeeds velocity) {
+    private Translation3d getReleaseVelocity(LinearVelocity projectileSpeed, Pose2d position, Translation3d releasePosition, Translation3d robotReleaseDirection, ChassisSpeeds velocity) {
         Translation3d shooterVelocity = robotReleaseDirection
                 .rotateBy(new Rotation3d(0, 0, position.getRotation().getRadians()))
                 .times(projectileSpeed.baseUnitMagnitude());
@@ -52,7 +50,7 @@ public class RobotProjectile implements Sendable {
         return shooterVelocity.plus(linearVelocity).plus(rotationalVelocity);
     }
 
-    public void update(Pose2d pose, ChassisSpeeds velocity, Translation3d robotReleasePosition, Translation3d robotReleaseDirection, Measure<Velocity<Distance>> shooterSpeed) {
+    public void update(Pose2d pose, ChassisSpeeds velocity, Translation3d robotReleasePosition, Translation3d robotReleaseDirection, LinearVelocity shooterSpeed) {
         Translation3d releasePosition = convertRobotToAbsolute(robotReleasePosition, pose);
         projectile.setInitialPosition(releasePosition);
         projectile.setInitialVelocity(getReleaseVelocity(shooterSpeed, pose, releasePosition, robotReleaseDirection, velocity));

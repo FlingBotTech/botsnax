@@ -4,12 +4,12 @@ import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import botsnax.system.Gearbox;
 import botsnax.system.motor.phoenix.TalonSRXMotor;
 
 public class TalonSRXSteering {
-    public static Gearbox create(SwerveModuleConstants constants) {
+    public static Gearbox create(SwerveModuleConstants<?, ?, ?> constants) {
         TalonSRX motor = new TalonSRX(constants.SteerMotorId);
 
         TalonSRXConfiguration config = new TalonSRXConfiguration();
@@ -32,7 +32,7 @@ public class TalonSRXSteering {
         }
 
         int absolutePosition = motor.getSensorCollection().getPulseWidthPosition();
-        error = motor.setSelectedSensorPosition(absolutePosition + constants.CANcoderOffset, 0, 1000);
+        error = motor.setSelectedSensorPosition(absolutePosition + constants.EncoderOffset, 0, 1000);
         if (error != ErrorCode.OK) {
             System.err.println("Failed to set sensor position for motor " + constants.SteerMotorId + ": " + error);
         }

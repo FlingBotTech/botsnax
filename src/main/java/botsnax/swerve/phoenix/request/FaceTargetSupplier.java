@@ -1,16 +1,16 @@
 package botsnax.swerve.phoenix.request;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import botsnax.control.ReactionTimeVelocityController;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
-import botsnax.control.ReactionTimeVelocityController;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class FaceTargetSupplier implements ChassisSpeedsSupplier {
     private final ChassisSpeedsSupplier chassisSpeedsSupplier;
@@ -24,12 +24,12 @@ public class FaceTargetSupplier implements ChassisSpeedsSupplier {
     }
 
     @Override
-    public ChassisSpeeds get(SwerveRequest.SwerveControlRequestParameters parameters, SwerveModule... modulesToApply) {
+    public ChassisSpeeds get(SwerveDrivetrain.SwerveControlParameters parameters, SwerveModule<?, ?, ?>... modulesToApply) {
         Translation2d delta = targetPosition.minus(parameters.currentPose.getTranslation());
-        Measure<Angle> angleToTarget = Radians.of(Math.atan2(delta.getY(), delta.getX()));
-        Measure<Angle> yawAngle = Radians.of(parameters.currentPose.getRotation().getRadians());
-        Measure<Angle> error = Radians.of(MathUtil.inputModulus(angleToTarget.minus(yawAngle).in(Radians), -Math.PI, Math.PI));
-        Measure<Velocity<Angle>> velocity = velocityCalculator.calculate(error);
+        Angle angleToTarget = Radians.of(Math.atan2(delta.getY(), delta.getX()));
+        Angle yawAngle = Radians.of(parameters.currentPose.getRotation().getRadians());
+        Angle error = Radians.of(MathUtil.inputModulus(angleToTarget.minus(yawAngle).in(Radians), -Math.PI, Math.PI));
+        AngularVelocity velocity = velocityCalculator.calculate(error);
         ChassisSpeeds speeds = chassisSpeedsSupplier.get(parameters, modulesToApply);
 
         speeds.omegaRadiansPerSecond = velocity.in(RadiansPerSecond);

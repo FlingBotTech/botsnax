@@ -1,6 +1,6 @@
 package botsnax.swerve;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 
 import static edu.wpi.first.wpilibj.Preferences.getDouble;
 import static java.lang.Double.NaN;
@@ -22,17 +22,17 @@ public class SwerveCalibration {
         return getModuleBaseName(i) + VELOCITY_BASE_NAME;
     }
 
-    public static void applyOffset(int index, SwerveModuleConstants constants) {
+    public static void applyOffset(int index, SwerveModuleConstants<?, ?, ?> constants) {
         double offset = getDouble(getOffsetName(index), NaN);
 
         if (!Double.isNaN(offset)) {
-            constants.withCANcoderOffset(offset);
+            constants.withEncoderOffset(offset);
         } else {
             System.err.println("Swerve module " + index + " is missing encoder offset value");
         }
     }
 
-    public static void apply(SwerveModuleConstants[] constants) {
+    public static void apply(SwerveModuleConstants<?, ?, ?>[] constants) {
         for (int i = 0; i < constants.length; i++) {
             applyOffset(i, constants[i]);
         }

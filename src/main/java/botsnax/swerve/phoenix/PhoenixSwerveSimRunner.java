@@ -20,8 +20,7 @@ public class PhoenixSwerveSimRunner {
         PhoenixSwerveSim sim = new PhoenixSwerveSim(
                 idealizedSwerveSim,
                 drivetrain.getModuleLocations(),
-                drivetrain.getPigeon(),
-                drivetrain.getDrivetrainConstants(),
+                drivetrain.getPigeon2(),
                 drivetrain.getModuleConstants());
         m_lastSimTime = Utils.getCurrentTimeSeconds();
 

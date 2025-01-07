@@ -2,9 +2,9 @@ package botsnax.system.encoder.phoenix;
 
 import botsnax.system.encoder.AbsoluteEncoder;
 import botsnax.system.motor.phoenix.TalonSRXMotor;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 public class TalonSRXAbsoluteEncoder implements AbsoluteEncoder {
     private final TalonSRXMotor motor;
@@ -19,17 +19,17 @@ public class TalonSRXAbsoluteEncoder implements AbsoluteEncoder {
     }
 
     @Override
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return motor.getAbsoluteAngle();
     }
 
     @Override
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return motor.getVelocity();
     }
 
     @Override
-    public void setAngle(Measure<Angle> angle) {
+    public void setAngle(Angle angle) {
         motor.setAbsoluteAngle(angle);
     }
 }

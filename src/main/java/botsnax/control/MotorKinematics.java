@@ -1,10 +1,9 @@
 package botsnax.control;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import botsnax.system.motor.MotorState;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 public interface MotorKinematics {
-    double getVoltageForVelocity(Measure<Velocity<Angle>> velocity, MotorState state);
+    Voltage getVoltageForVelocity(AngularVelocity velocity, MotorState state);
 }

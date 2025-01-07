@@ -1,5 +1,6 @@
 package botsnax.arm.commands.calibrate;
 
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -9,13 +10,12 @@ import botsnax.arm.commands.AwaitStabilityCommand;
 import java.util.function.Consumer;
 
 import static edu.wpi.first.units.ImmutableMeasure.ofRelativeUnits;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.*;
 
 public class CalibrateCommand extends SequentialCommandGroup {
     private ArmCalibration calibration;
 
-    public CalibrateCommand(ArmCalibrationParams arm, double maxVoltage, Consumer<ArmCalibration> consumer, Subsystem ... requirements) {
+    public CalibrateCommand(ArmCalibrationParams arm, Voltage maxVoltage, Consumer<ArmCalibration> consumer, Subsystem ... requirements) {
         addCommands(
                 new CalibrateGearRatioCommand(
                         arm,
@@ -41,11 +41,11 @@ public class CalibrateCommand extends SequentialCommandGroup {
         return new AwaitStabilityCommand(
                 arm,
                 () -> calibration.createController(
-                        state -> ofRelativeUnits(1, Degrees),
-                        ofRelativeUnits(1, Second),
-                        ofRelativeUnits(25, Degrees.per(Second))),
+                        state -> Degrees.of(1),
+                        Seconds.of(1),
+                        DegreesPerSecond.of(25)),
                 result -> {}
         )
-                .andThen(new InstantCommand(() -> arm.setVoltage(0), arm.requirements()));
+                .andThen(new InstantCommand(() -> arm.setVoltage(Volts.of(0)), arm.requirements()));
     }
 }

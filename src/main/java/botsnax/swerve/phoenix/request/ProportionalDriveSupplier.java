@@ -1,12 +1,11 @@
 package botsnax.swerve.phoenix.request;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 import java.util.function.Supplier;
 
@@ -19,10 +18,10 @@ public class ProportionalDriveSupplier implements ChassisSpeedsSupplier {
     private final Supplier<Double> vySupplier;
     private final Supplier<Double> vrSupplier;
     private final double controllerDeadband;
-    private final Measure<Velocity<Distance>> maxSpeed;
-    private final Measure<Velocity<Angle>> maxAngularSpeed;
+    private final LinearVelocity maxSpeed;
+    private final AngularVelocity maxAngularSpeed;
 
-    public ProportionalDriveSupplier(Supplier<Double> vxSupplier, Supplier<Double> vySupplier, Supplier<Double> vrSupplier, double controllerDeadband, Measure<Velocity<Distance>> maxSpeed, Measure<Velocity<Angle>> maxAngularSpeed) {
+    public ProportionalDriveSupplier(Supplier<Double> vxSupplier, Supplier<Double> vySupplier, Supplier<Double> vrSupplier, double controllerDeadband, LinearVelocity maxSpeed, AngularVelocity maxAngularSpeed) {
         this.vxSupplier = vxSupplier;
         this.vySupplier = vySupplier;
         this.vrSupplier = vrSupplier;
@@ -32,7 +31,7 @@ public class ProportionalDriveSupplier implements ChassisSpeedsSupplier {
     }
 
     @Override
-    public ChassisSpeeds get(SwerveRequest.SwerveControlRequestParameters parameters, SwerveModule... modulesToApply) {
+    public ChassisSpeeds get(SwerveDrivetrain.SwerveControlParameters parameters, SwerveModule<?, ?, ?>... modulesToApply) {
         double vx = vxSupplier.get();
         double vy = vySupplier.get();
         double vr = vrSupplier.get();

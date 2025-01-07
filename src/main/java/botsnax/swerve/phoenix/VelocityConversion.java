@@ -1,18 +1,16 @@
 package botsnax.swerve.phoenix;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 import static edu.wpi.first.units.Units.*;
 
-public record VelocityConversion(SwerveModuleConstants module, Measure<Velocity<Angle>> angularVelocity) {
-    public Measure<Velocity<Distance>> toLinearVelocity() {
-        return MetersPerSecond.of(
-                angularVelocity.in(RadiansPerSecond) *
-                Inches.of(module.WheelRadius).in(Meters) /
-                module.DriveMotorGearRatio);
+public record VelocityConversion(SwerveModuleConstants<?, ?, ?> module, AngularVelocity angularVelocity) {
+    public LinearVelocity toLinearVelocity() {
+        return Inches.of(module.WheelRadius)
+                .times(angularVelocity.in(RadiansPerSecond))
+                .div(module.DriveMotorGearRatio)
+                .per(Second);
     }
 }

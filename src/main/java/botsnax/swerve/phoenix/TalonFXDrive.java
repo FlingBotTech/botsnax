@@ -3,13 +3,13 @@ package botsnax.swerve.phoenix;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.signals.InvertedValue;
 import botsnax.flywheel.Flywheel;
 import botsnax.system.motor.phoenix.TalonFXMotor;
 
 public class TalonFXDrive {
-    public static Flywheel create(SwerveModuleConstants constants, String bus) {
+    public static Flywheel create(SwerveModuleConstants<?, ?, ?> constants, String bus) {
         TalonFX motor = new TalonFX(constants.DriveMotorId, bus);
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
 

@@ -1,20 +1,22 @@
 package botsnax.swerve.phoenix;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
-import edu.wpi.first.math.geometry.Translation2d;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
-public class PhoenixSwerveDrivetrain extends SwerveDrivetrain {
+public class PhoenixSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
     private final SwerveDrivetrainConstants drivetrainConstants;
-    private final SwerveModuleConstants[] modules;
+    private final SwerveModuleConstants<?, ?, ?>[] modules;
 
-    public PhoenixSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
-        super(driveTrainConstants, modules);
-        this.drivetrainConstants = driveTrainConstants;
+    public PhoenixSwerveDrivetrain(
+            SwerveDrivetrainConstants drivetrainConstants,
+            SwerveModuleConstants<?, ?, ?>... modules
+    ) {
+        super(TalonFX :: new, TalonFX :: new, CANcoder :: new, drivetrainConstants, modules);
+        this.drivetrainConstants = drivetrainConstants;
         this.modules = modules;
     }
 
@@ -22,23 +24,11 @@ public class PhoenixSwerveDrivetrain extends SwerveDrivetrain {
         return drivetrainConstants;
     }
 
-    public SwerveModuleConstants[] getModuleConstants() {
+    public SwerveModuleConstants<?, ?, ?>[] getModuleConstants() {
         return modules;
     }
 
-    public SwerveModule[] getModules() {
-        return Modules;
-    }
-
-    public Translation2d[] getModuleLocations() {
-        return m_moduleLocations;
-    }
-
-    public Pigeon2 getPigeon() {
-        return m_pigeon2;
-    }
-
     public ChassisSpeeds getChassisSpeeds() {
-        return m_kinematics.toChassisSpeeds(getState().ModuleStates);
+        return getKinematics().toChassisSpeeds(getState().ModuleStates);
     }
 }

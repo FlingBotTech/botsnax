@@ -1,9 +1,9 @@
 package botsnax.arm.commands.calibrate;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Time;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import botsnax.system.motor.MotorSystem;
 import botsnax.system.motor.MotorState;
@@ -13,10 +13,10 @@ import static edu.wpi.first.units.Units.Degrees;
 
 public record ArmCalibrationParams(
         Gearbox gearbox,
-        Measure<Angle> range,
+        Angle range,
         Subsystem ... requirements
 ) {
-    public MotorState getMotorState(Measure<Time> time) {
+    public MotorState getMotorState(Time time) {
         return gearbox.getMotor().getState(time);
     }
 
@@ -24,19 +24,19 @@ public record ArmCalibrationParams(
         return gearbox.getMotor().withEncoder(gearbox.getOutputEncoder(), false);
     }
 
-    public MotorState getEncoderState(Measure<Time> time) {
+    public MotorState getEncoderState(Time time) {
         return new MotorState(gearbox().getMotor().getVoltage(), time, gearbox.getOutputEncoder().getAngle(), gearbox.getOutputEncoder().getVelocity());
     }
 
-    public void setVoltage(double voltage) {
+    public void setVoltage(Voltage voltage) {
         gearbox.getMotor().setVoltage(voltage);
     }
 
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return gearbox.getOutputEncoder().getAngle();
     }
 
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return gearbox.getOutputEncoder().getVelocity();
     }
 

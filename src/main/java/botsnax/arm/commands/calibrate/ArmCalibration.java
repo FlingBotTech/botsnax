@@ -1,23 +1,23 @@
 package botsnax.arm.commands.calibrate;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Time;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.wpilibj.Preferences;
 import botsnax.arm.commands.ArmKinematics;
 import botsnax.commands.calibrate.VelocityCalibration;
 import botsnax.control.MotorController;
 import botsnax.control.ReactionTimeVelocityController;
 import botsnax.control.SetpointController;
 import botsnax.system.motor.MotorState;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Preferences;
 
 import java.util.Optional;
 import java.util.function.Function;
 
-import static edu.wpi.first.units.ImmutableMeasure.ofRelativeUnits;
-import static edu.wpi.first.units.Units.Degrees;
 import static botsnax.control.SetpointController.ofVelocityController;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Volts;
 import static java.lang.Double.NaN;
 import static java.lang.Math.signum;
 
@@ -27,7 +27,7 @@ public record ArmCalibration(
         VelocityCalibration positiveVelocityCalibration,
         VelocityCalibration negativeVelocityCalibration) implements ArmKinematics {
 
-    private static final Measure<Angle> DEADBAND = ofRelativeUnits(0.01, Degrees);
+    private static final Angle DEADBAND = Degrees.of(0.01);
 
     @Override
     public double getGearRatio() {
@@ -35,16 +35,16 @@ public record ArmCalibration(
     }
 
     @Override
-    public Measure<Angle> getHorizontalAngle() {
+    public Angle getHorizontalAngle() {
         return gravityController.offset();
     }
 
     @Override
-    public double getVoltageForVelocity(Measure<Velocity<Angle>> velocity, MotorState state) {
-        return getVoltage(velocity, state) + gravityController.calculate(state);
+    public Voltage getVoltageForVelocity(AngularVelocity velocity, MotorState state) {
+        return getVoltage(velocity, state).plus(gravityController.calculate(state));
     }
 
-    public double getVoltage(Measure<Velocity<Angle>> velocity, MotorState state) {
+    public Voltage getVoltage(AngularVelocity velocity, MotorState state) {
         double signOfVelocity = signum(velocity.baseUnitMagnitude());
 
         if (signOfVelocity > 0) {
@@ -52,11 +52,11 @@ public record ArmCalibration(
         } else if (signOfVelocity < 0) {
             return negativeVelocityCalibration.getVoltageForVelocity(velocity, state);
         } else {
-            return 0;
+            return Volts.of(0);
         }
     }
 
-    public MotorController createController(Function<MotorState, Measure<Angle>> profile, Measure<Time> reactionTime, Measure<Velocity<Angle>> maxVelocity) {
+    public MotorController createController(Function<MotorState, Angle> profile, Time reactionTime, AngularVelocity maxVelocity) {
         return SetpointController.ofProfile(profile, ofVelocityController(
                 new ReactionTimeVelocityController(reactionTime, maxVelocity, DEADBAND),
                 this
@@ -95,15 +95,15 @@ public record ArmCalibration(
         }
     }
 
-    public Measure<Angle> getOffset() {
+    public Angle getOffset() {
         return gravityController.offset();
     }
 
-    public Measure<Angle> offsetByLevel(Measure<Angle> angle) {
+    public Angle offsetByLevel(Angle angle) {
         return angle.minus(gravityController.offset());
     }
 
-    public Measure<Angle> getMotorAngleForEncoderAngle(Measure<Angle> encoderAngle) {
+    public Angle getMotorAngleForEncoderAngle(Angle encoderAngle) {
         return encoderAngle.times(gearRatio());
     }
 }

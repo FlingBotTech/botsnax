@@ -9,6 +9,8 @@ import botsnax.swerve.SwerveCalibration;
 import botsnax.swerve.SwerveModule;
 import botsnax.system.motor.AngleSetter;
 
+import static edu.wpi.first.units.Units.Volts;
+
 public class CalibrateDriveMotorsCommand extends SequentialCommandGroup {
     public CalibrateDriveMotorsCommand(
             SwerveDriveKinematics kinematics,
@@ -27,7 +29,7 @@ public class CalibrateDriveMotorsCommand extends SequentialCommandGroup {
                         modules,
                         angleSetter,
                         0,
-                        0,
+                        Volts.of(0),
                         requirements
                 )
                         .alongWith(new WaitCommand(5))

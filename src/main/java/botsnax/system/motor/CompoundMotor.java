@@ -1,8 +1,8 @@
 package botsnax.system.motor;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 import java.util.function.Consumer;
 
@@ -37,22 +37,22 @@ public class CompoundMotor<T extends MotorSystem> implements MotorSystem {
     }
 
     @Override
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return getPrimary().getAngle();
     }
 
     @Override
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return getPrimary().getVelocity();
     }
 
     @Override
-    public double getVoltage() {
+    public Voltage getVoltage() {
         return getPrimary().getVoltage();
     }
 
     @Override
-    public void setVoltage(double voltage) {
+    public void setVoltage(Voltage voltage) {
         for (MotorSystem motor : motors) {
             motor.setVoltage(voltage);
         }
@@ -64,7 +64,7 @@ public class CompoundMotor<T extends MotorSystem> implements MotorSystem {
     }
 
     @Override
-    public void setAngle(Measure<Angle> angle) {
+    public void setAngle(Angle angle) {
         forEach(motor -> motor.setAngle(angle));
     }
 

@@ -1,7 +1,6 @@
 package botsnax.arm.commands.calibrate;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.*;
 import botsnax.control.MotorController;
 import botsnax.arm.commands.AwaitStabilityCommand;
@@ -13,7 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.floor;
 
 public class CalibrateGravityCommand extends SequentialCommandGroup {
-    private static final Measure<Angle> increment = Degrees.of(15);
+    private static final Angle increment = Degrees.of(15);
 
     private final ArmCalibrationParams arm;
     private final ArmPositionResults armPositionResults = new ArmPositionResults();
@@ -22,7 +21,7 @@ public class CalibrateGravityCommand extends SequentialCommandGroup {
 
     public CalibrateGravityCommand(
             ArmCalibrationParams arm,
-            Measure<Angle> startAngle,
+            Angle startAngle,
             Supplier<ArmCalibration> calibrationSupplier,
             Consumer<ArmCalibration> calibrationConsumer) {
         this.arm = arm;
@@ -33,7 +32,7 @@ public class CalibrateGravityCommand extends SequentialCommandGroup {
                 .andThen(solve(calibrationConsumer, arm.requirements())));
     }
 
-    private void addPositionCommands(Measure<Angle> startAngle) {
+    private void addPositionCommands(Angle startAngle) {
         int phases = (int) floor(arm.range().times(0.9).minus(startAngle).baseUnitMagnitude() /
                 increment.baseUnitMagnitude());
 
@@ -42,11 +41,11 @@ public class CalibrateGravityCommand extends SequentialCommandGroup {
         }
     }
 
-    private Command stabilizeAtAngle(Measure<Angle> angle) {
+    private Command stabilizeAtAngle(Angle angle) {
         return new AwaitStabilityCommand(arm, () -> createController(angle), result -> {
             armPositionResults.add(result);
 
-            if (result.voltage() > calibration.gravityController().gain()) {
+            if (result.voltage().gt(calibration.gravityController().gain())) {
                 calibration = calibration.withGravity(new ArmGravityController(result.voltage(), angle));
             }
         });
@@ -61,7 +60,7 @@ public class CalibrateGravityCommand extends SequentialCommandGroup {
         );
     }
 
-    private MotorController createController(Measure<Angle> angle) {
+    private MotorController createController(Angle angle) {
         return calibration.createController(
                 state -> angle,
                 Seconds.of(0.25),

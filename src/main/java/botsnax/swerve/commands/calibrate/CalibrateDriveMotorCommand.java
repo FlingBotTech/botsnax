@@ -1,6 +1,7 @@
 package botsnax.swerve.commands.calibrate;
 
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -13,8 +14,7 @@ import botsnax.system.motor.AngleSetter;
 
 import java.util.function.Consumer;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.*;
 
 public class CalibrateDriveMotorCommand extends SequentialCommandGroup {
     private final SwerveDriveKinematics kinematics;
@@ -40,7 +40,7 @@ public class CalibrateDriveMotorCommand extends SequentialCommandGroup {
         double[] percentages = new double[] { 0.15, 0.3, 0.45, /* 0.6 */ };
 
         for (double percentage : percentages) {
-            addCommands(runAtSpeed(percentage * 12.0, requirements));
+            addCommands(runAtSpeed(Volts.of(12).times(percentage), requirements));
         }
 
         addCommands(park(requirements));
@@ -48,7 +48,7 @@ public class CalibrateDriveMotorCommand extends SequentialCommandGroup {
         addCommands(waitForPark());
     }
 
-    private Command runAtSpeed(double voltage, Subsystem... requirements) {
+    private Command runAtSpeed(Voltage voltage, Subsystem... requirements) {
         SwerveModule module = modules[moduleIndex];
 
         return new RotateAtVoltageCommand(kinematics, modules, angleSetter, moduleIndex, voltage, requirements)
@@ -61,7 +61,7 @@ public class CalibrateDriveMotorCommand extends SequentialCommandGroup {
     }
 
     private Command park(Subsystem ... requirements) {
-        return runAtSpeed(0, requirements);
+        return runAtSpeed(Volts.of(0), requirements);
     }
 
     private Command waitForPark(Subsystem... requirements) {

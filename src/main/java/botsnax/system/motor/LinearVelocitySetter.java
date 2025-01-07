@@ -1,17 +1,18 @@
 package botsnax.system.motor;
 
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import botsnax.flywheel.Flywheel;
 import botsnax.util.LinearAngularConversion;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Voltage;
+
+import static edu.wpi.first.units.Units.Volts;
 
 public interface LinearVelocitySetter {
-    void setVelocity(Measure<Velocity<Distance>> linearVelocity, Flywheel flywheel);
+    void setVelocity(LinearVelocity linearVelocity, Flywheel flywheel);
 
-    static LinearVelocitySetter createOpenLoop(Measure<Velocity<Distance>> speedAtNominalVoltage) {
+    static LinearVelocitySetter createOpenLoop(LinearVelocity speedAtNominalVoltage) {
         return (linearVelocity, flywheel) -> {
-            double voltage = linearVelocity.baseUnitMagnitude() / speedAtNominalVoltage.baseUnitMagnitude() * 12;
+            Voltage voltage = Volts.of(12).times(linearVelocity.baseUnitMagnitude() / speedAtNominalVoltage.baseUnitMagnitude());
             flywheel.setVoltage(voltage);
         };
     }

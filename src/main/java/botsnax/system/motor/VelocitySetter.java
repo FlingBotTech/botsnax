@@ -1,10 +1,8 @@
 package botsnax.system.motor;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import botsnax.flywheel.Flywheel;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 public interface VelocitySetter {
-    void apply(Measure<Velocity<Angle>> velocity, Flywheel flywheel);
+    void apply(AngularVelocity velocity, Flywheel flywheel);
 }

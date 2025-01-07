@@ -1,13 +1,15 @@
 package botsnax.swerve.phoenix;
 
-import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
-import edu.wpi.first.units.*;
 import botsnax.commands.calibrate.VelocityCalibration;
-import botsnax.util.phoenix.CANcoderUtil;
 import botsnax.swerve.sim.SwerveSim;
+import botsnax.util.phoenix.CANcoderUtil;
+import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,13 +18,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 public class PhoenixSwerveDrivetrainBuilder {
     private static final String CALIBRATION_BASE_NAME = "SwerveModule";
     private static final double DRIVE_KP = 0;
 
     private final SwerveDrivetrainConstants drivetrainConstants;
-    private final SwerveModuleConstants[] moduleConstants;
+    private final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
 
     private Optional<PhoenixSwerveDrivetrain> drivetrainIfAny = Optional.empty();
 
@@ -30,24 +33,26 @@ public class PhoenixSwerveDrivetrainBuilder {
         return drivetrainConstants;
     }
 
-    public SwerveModuleConstants[] getModuleConstants() {
+    public SwerveModuleConstants<?, ?, ?>[] getModuleConstants() {
         return moduleConstants;
     }
 
-    public PhoenixSwerveDrivetrainBuilder(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... moduleConstants) {
+    public PhoenixSwerveDrivetrainBuilder(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants<?, ?, ?>... moduleConstants) {
         this.drivetrainConstants = driveTrainConstants;
         this.moduleConstants = moduleConstants;
     }
 
-    public Optional<SwerveDrivetrain> createDrivetrain() {
-        SwerveModuleConstants[] modulesWithOffsets = Arrays
+    public Optional<PhoenixSwerveDrivetrain> createDrivetrain() {
+        SwerveModuleConstants<?, ?, ?>[] modulesWithOffsets = Arrays
                 .stream(moduleConstants)
                 .flatMap(module -> loadOffset(module).stream())
                 .map(this::loadVelocityCalibration)
                 .toArray(SwerveModuleConstants[]::new);
 
         if (modulesWithOffsets.length == moduleConstants.length) {
-            PhoenixSwerveDrivetrain drivetrain = new PhoenixSwerveDrivetrain(drivetrainConstants, modulesWithOffsets);
+            PhoenixSwerveDrivetrain drivetrain = new PhoenixSwerveDrivetrain(
+                    drivetrainConstants,
+                    modulesWithOffsets);
             drivetrainIfAny = Optional.of(drivetrain);
 
             return Optional.of(drivetrain);
@@ -57,18 +62,19 @@ public class PhoenixSwerveDrivetrainBuilder {
         }
     }
 
-    private Stream<Measure<Velocity<Distance>>> getModuleLinearVelocities() {
+    private Stream<LinearVelocity> getModuleLinearVelocities() {
         return Arrays
                 .stream(moduleConstants)
                 .flatMap(module -> VelocityCalibration
                         .load(getVelocityCalibrationPreferenceName(module.DriveMotorId))
-                        .map(calibration -> new VelocityConversion(module, calibration
-                                .getVelocityForVoltage(12))
+                        .map(calibration -> new VelocityConversion(
+                                module,
+                                calibration.getVelocityForVoltage(Volts.of(12)))
                                 .toLinearVelocity())
                         .stream());
     }
 
-    public Optional<Measure<Velocity<Distance>>> getCalibratedVelocityAt12v() {
+    public Optional<LinearVelocity> getCalibratedVelocityAt12v() {
         if (getModuleLinearVelocities().count() == moduleConstants.length) {
             return getModuleLinearVelocities().min(Comparator.naturalOrder());
         } else {
@@ -77,9 +83,9 @@ public class PhoenixSwerveDrivetrainBuilder {
         }
     }
 
-    public Measure<Velocity<Distance>> getConfiguredVelocityAt12v() {
+    public LinearVelocity getConfiguredVelocityAt12v() {
         return MetersPerSecond.of(
-                Arrays.stream(moduleConstants).mapToDouble(module -> module.SpeedAt12VoltsMps).min().orElseThrow()
+                Arrays.stream(moduleConstants).mapToDouble(module -> module.SpeedAt12Volts).min().orElseThrow()
         );
     }
 
@@ -95,16 +101,16 @@ public class PhoenixSwerveDrivetrainBuilder {
         return CALIBRATION_BASE_NAME + ".velocity_" + motorId;
     }
 
-    private Optional<SwerveModuleConstants> loadOffset(SwerveModuleConstants module) {
+    private Optional<SwerveModuleConstants<?, ?, ?>> loadOffset(SwerveModuleConstants<?, ?, ?> module) {
         return CANcoderUtil
-                .loadOffset(getEncoderOffsetPreferenceName(module.CANcoderId))
-                .map(module::withCANcoderOffset);
+                .loadOffset(getEncoderOffsetPreferenceName(module.EncoderId))
+                .map(module::withEncoderOffset);
     }
 
-    private SwerveModuleConstants loadVelocityCalibration(SwerveModuleConstants module) {
+    private SwerveModuleConstants<?, ?, ?> loadVelocityCalibration(SwerveModuleConstants<?, ?, ?> module) {
         return VelocityCalibration
                 .load(getVelocityCalibrationPreferenceName(module.DriveMotorId))
-                .map(calibration -> module.withDriveMotorGains(calibration.asTalonConfig().withKP(DRIVE_KP)))
+                .<SwerveModuleConstants<?, ?, ?>>map(calibration -> module.withDriveMotorGains(calibration.asTalonConfig().withKP(DRIVE_KP)))
                 .orElse(module);
     }
 }

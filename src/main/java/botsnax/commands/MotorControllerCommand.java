@@ -1,12 +1,12 @@
 package botsnax.commands;
 
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Time;
+import botsnax.control.MotorController;
+import botsnax.system.motor.MotorState;
+import botsnax.system.motor.MotorSystem;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import botsnax.control.MotorController;
-import botsnax.system.motor.MotorSystem;
-import botsnax.system.motor.MotorState;
 
 import java.util.function.Supplier;
 
@@ -16,7 +16,7 @@ import static edu.wpi.first.units.Units.Microseconds;
 public class MotorControllerCommand extends Command {
     private final MotorSystem motorSystem;
     private final Supplier<MotorController> supplier;
-    private Measure<Time> startTime;
+    private Time startTime;
 
     public MotorControllerCommand(MotorSystem motorSystem, Supplier<MotorController> supplier, Subsystem ... requirements) {
         this.motorSystem = motorSystem;
@@ -36,9 +36,9 @@ public class MotorControllerCommand extends Command {
 
     @Override
     public void execute() {
-        Measure<Time> time = Microseconds.of(getFPGATime()).minus(startTime);
+        Time time = Microseconds.of(getFPGATime()).minus(startTime);
         MotorState state = motorSystem.getState(time);
-        double voltage = supplier.get().calculate(state);
+        Voltage voltage = supplier.get().calculate(state);
 
         motorSystem.setVoltage(voltage);
     }

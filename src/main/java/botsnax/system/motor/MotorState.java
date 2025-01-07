@@ -1,33 +1,37 @@
 package botsnax.system.motor;
 
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 
 public class MotorState {
-    private final double voltage;
-    private final Measure<Time> time;
-    private final Measure<Angle> angle;
-    private final Measure<Velocity<Angle>> velocity;
+    private final Voltage voltage;
+    private final Time time;
+    private final Angle angle;
+    private final AngularVelocity velocity;
 
-    public MotorState(double voltage, Measure<Time> time, Measure<Angle> angle, Measure<Velocity<Angle>> velocity) {
+    public MotorState(Voltage voltage, Time time, Angle angle, AngularVelocity velocity) {
         this.voltage = voltage;
         this.time = time;
         this.angle = angle;
         this.velocity = velocity;
     }
 
-    public double getVoltage() {
+    public Voltage getVoltage() {
         return voltage;
     }
 
-    public Measure<Time> getTime() {
+    public Time getTime() {
         return time;
     }
 
-    public Measure<Angle> getAngle() {
+    public Angle getAngle() {
         return angle;
     }
 
-    public Measure<Velocity<Angle>> getVelocity() {
+    public AngularVelocity getVelocity() {
         return velocity;
     }
 }

@@ -1,17 +1,17 @@
 package botsnax.arm.commands.calibrate;
 
-import edu.wpi.first.units.Angle;
+import botsnax.commands.MotorControllerCommand;
+import botsnax.commands.calibrate.VelocityCalibrationData;
+import botsnax.control.CompositeMotorController;
+import botsnax.control.MotorController;
 import edu.wpi.first.units.BaseUnits;
 import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import botsnax.control.CompositeMotorController;
-import botsnax.control.MotorController;
-import botsnax.commands.calibrate.VelocityCalibrationData;
-import botsnax.commands.MotorControllerCommand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +19,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.ImmutableMeasure.ofBaseUnits;
 import static botsnax.control.MotorControllerFactory.createConstantController;
+import static edu.wpi.first.units.Units.Volts;
 
 public class CalibrateVelocityCommand extends SequentialCommandGroup {
     private static final int PHASES = 3;
@@ -32,7 +32,7 @@ public class CalibrateVelocityCommand extends SequentialCommandGroup {
 
     public CalibrateVelocityCommand(
             ArmCalibrationParams arm,
-            double maxVoltage,
+            Voltage maxVoltage,
             Supplier<ArmCalibration> calibrationSupplier,
             Consumer<ArmCalibration> calibrationConsumer) {
         this.arm = arm;
@@ -54,15 +54,15 @@ public class CalibrateVelocityCommand extends SequentialCommandGroup {
         );
     }
 
-    private double getVoltage(int increment, double maxVoltage) {
-        double maxGravityVoltage = calibration.gravityController().gain();
-        double maxTestVoltage = MAX_FRACTION_OF_AVAILABLE_VOLTAGE * (maxVoltage - maxGravityVoltage);
+    private Voltage getVoltage(int increment, Voltage maxVoltage) {
+        Voltage maxGravityVoltage = calibration.gravityController().gain();
+        Voltage maxTestVoltage = maxVoltage.minus(maxGravityVoltage).times(MAX_FRACTION_OF_AVAILABLE_VOLTAGE);
 
-        return increment * maxTestVoltage / PHASES;
+        return maxTestVoltage.times(increment).div(PHASES);
     }
 
-    private Command getRunAtVoltageCommand(int increment, double maxVoltage, Subsystem ... requirements) {
-        final List<Measure<Velocity<Angle>>> velocities = new ArrayList<>();
+    private Command getRunAtVoltageCommand(int increment, Voltage maxVoltage, Subsystem ... requirements) {
+        final List<AngularVelocity> velocities = new ArrayList<>();
         BooleanSupplier isOutOfRange = increment > 0 ?
                 () -> arm.getAngle().gt(arm.range().times(0.8)) :
                 () -> arm.getAngle().lt(arm.range().times(0.2));
@@ -71,7 +71,7 @@ public class CalibrateVelocityCommand extends SequentialCommandGroup {
                 createConstantController(getVoltage(increment, maxVoltage)),
                 state -> {
                     velocities.add(state.getVelocity());
-                    return 0;
+                    return Volts.of(0);
                 });
 
         return new MotorControllerCommand(arm.encoderMotorSystem(), controllerSupplier, arm.requirements())
@@ -80,14 +80,14 @@ public class CalibrateVelocityCommand extends SequentialCommandGroup {
                         data.add(summarize(velocities), getVoltage(increment, maxVoltage))));
     }
 
-    private Measure<Velocity<Angle>> summarize(List<Measure<Velocity<Angle>>> velocities) {
+    private AngularVelocity summarize(List<AngularVelocity> velocities) {
         double average = velocities
                 .subList(velocities.size() / 3, 2 * velocities.size() / 3)
                 .stream()
-                .mapToDouble(Measure :: baseUnitMagnitude)
+                .mapToDouble(Measure::baseUnitMagnitude)
                 .average()
                 .orElseThrow();
 
-        return ofBaseUnits(average, BaseUnits.Angle.per(BaseUnits.Time));
+        return BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(average);
     }
 }

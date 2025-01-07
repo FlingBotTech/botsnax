@@ -1,6 +1,10 @@
 package botsnax.util;
 
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 import static edu.wpi.first.units.Units.Radians;
 
@@ -11,19 +15,19 @@ public class LinearAngularConversion {
         this.angleToDistance = angleToDistance;
     }
 
-    public Measure<Distance> getDistance(Measure<Angle> angle) {
-        return BaseUnits.Distance.of(angle.in(Radians) * angleToDistance);
+    public Distance getDistance(Angle angle) {
+        return BaseUnits.DistanceUnit.of(angle.in(Radians) * angleToDistance);
     }
 
-    public Measure<Velocity<Angle>> getAngularVelocity(Measure<Velocity<Distance>> linearVelocity) {
-        return Radians.per(BaseUnits.Time).of(linearVelocity.baseUnitMagnitude() / angleToDistance);
+    public AngularVelocity getAngularVelocity(LinearVelocity linearVelocity) {
+        return Radians.per(BaseUnits.TimeUnit).of(linearVelocity.baseUnitMagnitude() / angleToDistance);
     }
 
-    public Measure<Velocity<Distance>> getLinearVelocity(Measure<Velocity<Angle>> angularVelocity) {
-        return BaseUnits.Velocity.of(angularVelocity.in(Radians.per(BaseUnits.Time)) * angleToDistance);
+    public LinearVelocity getLinearVelocity(AngularVelocity angularVelocity) {
+        return BaseUnits.DistanceUnit.per(BaseUnits.TimeUnit).of(angularVelocity.in(Radians.per(BaseUnits.TimeUnit)) * angleToDistance);
     }
 
-    public static LinearAngularConversion ofWheelRadiusGearRatio(Measure<Distance> wheelRadius, double gearRatio) {
+    public static LinearAngularConversion ofWheelRadiusGearRatio(Distance wheelRadius, double gearRatio) {
         return new LinearAngularConversion(wheelRadius.baseUnitMagnitude() / gearRatio);
     }
 }

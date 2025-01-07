@@ -2,10 +2,8 @@ package botsnax.swerve;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.XboxController;
 
 import java.util.function.Function;
@@ -21,8 +19,8 @@ public class ControllerSpeeds {
             Supplier<Double> vySupplier,
             Supplier<Double> vrSupplier,
             double controllerDeadband,
-            Measure<Velocity<Distance>> maxSpeed,
-            Measure<Velocity<Angle>> maxAngularSpeed
+            LinearVelocity maxSpeed,
+            AngularVelocity maxAngularSpeed
     ) {
         return pose -> {
             double vx = vxSupplier.get();
@@ -40,8 +38,8 @@ public class ControllerSpeeds {
     public static Function<Pose2d, ChassisSpeeds> of(
             XboxController controller,
             double controllerDeadband,
-            Measure<Velocity<Distance>> maxSpeed,
-            Measure<Velocity<Angle>> maxAngularSpeed) {
+            LinearVelocity maxSpeed,
+            AngularVelocity maxAngularSpeed) {
         return ControllerSpeeds.of(
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),

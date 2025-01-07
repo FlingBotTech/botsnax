@@ -1,11 +1,14 @@
 package botsnax.swerve.sim;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import botsnax.util.MomentsOfInertia;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.*;
-import botsnax.util.MomentOfInertia;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.MomentOfInertia;
 
 import java.util.function.Function;
 
@@ -17,9 +20,9 @@ public class SwerveDrivetrain {
 
     public SwerveDrivetrain(
             Wheels wheels,
-            Measure<Mass> carriageMass,
-            Measure<Mult<Mass, Mult<Distance, Distance>>> carriageMoment,
-            Measure<Distance> wheelToCenterDistance,
+            Mass carriageMass,
+            MomentOfInertia carriageMoment,
+            Distance wheelToCenterDistance,
             double frictionCoefficient) {
 
         double radiusRatio = wheels.radius().baseUnitMagnitude() / wheelToCenterDistance.baseUnitMagnitude();
@@ -27,7 +30,7 @@ public class SwerveDrivetrain {
         angularDrive = new AngularWheelDrivetrain(wheels, carriageMass, carriageMoment, frictionCoefficient, radiusRatio);
     }
 
-    public Measure<Velocity<Distance>> getMaxLinearSpeed() {
+    public LinearVelocity getMaxLinearSpeed() {
         return linearDrive.getMaxSpeed();
     }
 
@@ -44,15 +47,15 @@ public class SwerveDrivetrain {
     }
 
     public static SwerveDrivetrain ofRectangularChassis(
-            SwerveModuleConstants[] modules,
+            SwerveModuleConstants<?, ?, ?>[] modules,
             Function<Integer,DCMotor> motorSupplier,
-            Measure<Mass> carriageMass) {
+            Mass carriageMass) {
         if (modules.length != 4) {
             throw new IllegalArgumentException("Number of modules must be 4");
         }
 
-        SwerveModuleConstants module = modules[0];
-        Measure<Distance> wheelToCenterDistance = Meters.of(VecBuilder.fill(module.LocationX, module.LocationY).norm());
+        SwerveModuleConstants<?, ?, ?> module = modules[0];
+        Distance wheelToCenterDistance = Meters.of(VecBuilder.fill(module.LocationX, module.LocationY).norm());
 
         return new SwerveDrivetrain(
                 new Wheels(
@@ -60,11 +63,11 @@ public class SwerveDrivetrain {
                         motorSupplier,
                         module.DriveMotorGearRatio,
                         Inches.of(module.WheelRadius),
-                        Kilograms.mult(Meters.mult(Meters)).of(0),
+                        KilogramSquareMeters.of(0),
                         Amps.of(module.SlipCurrent)
                 ),
                 carriageMass,
-                MomentOfInertia.ofUniformCylinder(carriageMass, wheelToCenterDistance.times(0.5)),
+                MomentsOfInertia.ofUniformCylinder(carriageMass, wheelToCenterDistance.times(0.5)),
                 wheelToCenterDistance,
                 100 / carriageMass.baseUnitMagnitude());
     }

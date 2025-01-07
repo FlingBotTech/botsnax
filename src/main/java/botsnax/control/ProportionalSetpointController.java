@@ -1,25 +1,27 @@
 package botsnax.control;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
 import botsnax.system.motor.MotorState;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
+
+import static edu.wpi.first.units.Units.Volts;
 
 public class ProportionalSetpointController implements SetpointController {
-    private final double gain;
+    private final Voltage gain;
 
-    public ProportionalSetpointController(double gain) {
+    public ProportionalSetpointController(Voltage gain) {
         this.gain = gain;
     }
 
     @Override
-    public double calculate(Measure<Angle> setpoint, MotorState state) {
-        return gain * setpoint.minus(state.getAngle()).baseUnitMagnitude();
+    public Voltage calculate(Angle setpoint, MotorState state) {
+        return gain.times(setpoint.minus(state.getAngle()).baseUnitMagnitude());
     }
 
     public static ProportionalSetpointController create(
-            double maximumVoltage,
-            Measure<Angle> errorToApplyMaximumVoltage) {
-        double gain = maximumVoltage / errorToApplyMaximumVoltage.baseUnitMagnitude();
+            Voltage maximumVoltage,
+            Angle errorToApplyMaximumVoltage) {
+        Voltage gain = maximumVoltage.div(errorToApplyMaximumVoltage.baseUnitMagnitude());
         return new ProportionalSetpointController(gain);
     }
 }

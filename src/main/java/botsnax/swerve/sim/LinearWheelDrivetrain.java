@@ -1,39 +1,39 @@
 package botsnax.swerve.sim;
 
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.*;
 
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.*;
+import static java.lang.Math.pow;
 
-public record LinearWheelDrivetrain(Wheels wheels, Measure<Mass> carriageMass, double frictionCoefficient) {
-    private Measure<Distance> convertPositionTo(Measure<Angle> angle) {
+public record LinearWheelDrivetrain(Wheels wheels, Mass carriageMass, double frictionCoefficient) {
+    private Distance convertPositionTo(Angle angle) {
         return wheels.radius().times(angle.in(Radians));
     }
 
-    public Measure<Velocity<Angle>> convertVelocityFrom(Measure<Velocity<Distance>> velocity) {
-        return BaseUnits.Angle.per(BaseUnits.Time).of(velocity.baseUnitMagnitude() / wheels.radius().baseUnitMagnitude());
+    public AngularVelocity convertVelocityFrom(LinearVelocity velocity) {
+        return BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(velocity.baseUnitMagnitude() / wheels.radius().baseUnitMagnitude());
     }
 
-    @SuppressWarnings("unchecked")
-    private Measure<Velocity<Distance>> convertVelocityTo(Measure<Velocity<Angle>> velocity) {
-        return (Measure<Velocity<Distance>>) velocity.times(wheels.radius());
+    private LinearVelocity convertVelocityTo(AngularVelocity velocity) {
+        return BaseUnits.DistanceUnit.per(BaseUnits.TimeUnit).of(velocity.baseUnitMagnitude() * wheels.radius().baseUnitMagnitude());
     }
 
-    @SuppressWarnings("unchecked")
-    private Measure<Mult<Mass, Mult<Distance, Distance>>> getMoment() {
-        return (Measure<Mult<Mass, Mult<Distance, Distance>>>) carriageMass.times(wheels.radius().times(wheels.radius()));
+    private MomentOfInertia getMoment() {
+        return KilogramSquareMeters.of(carriageMass.in(Kilograms) * pow(wheels.radius().in(Meters), 2));
     }
 
-    public Measure<Velocity<Distance>> getMaxSpeed() {
+    public LinearVelocity getMaxSpeed() {
         return convertVelocityTo(wheels.getMaxSpeed());
     }
 
-    public Measure<Velocity<Distance>> getVelocityChange(Measure<Velocity<Distance>> finalVelocity, Measure<Velocity<Distance>> currentVelocity, Measure<Time> dt) {
+    public LinearVelocity getVelocityChange(LinearVelocity finalVelocity, LinearVelocity currentVelocity, Time dt) {
         WheelDrivetrain drivetrain = new WheelDrivetrain(wheels, carriageMass, getMoment(), frictionCoefficient);
 
         return convertVelocityTo(drivetrain.getVelocityChange(convertVelocityFrom(finalVelocity), convertVelocityFrom(currentVelocity), dt));
     }
 
-    public Measure<Distance> getDistanceChange(Measure<Velocity<Distance>> finalVelocity, Measure<Velocity<Distance>> velocity, Measure<Time> dt) {
+    public Distance getDistanceChange(LinearVelocity finalVelocity, LinearVelocity velocity, Time dt) {
         WheelDrivetrain drivetrain = new WheelDrivetrain(wheels, carriageMass, getMoment(), frictionCoefficient);
 
         return convertPositionTo(drivetrain.getAngleChange(convertVelocityFrom(finalVelocity), convertVelocityFrom(velocity), dt));

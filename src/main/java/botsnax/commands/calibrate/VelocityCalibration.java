@@ -1,43 +1,43 @@
 package botsnax.commands.calibrate;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.BaseUnits;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.wpilibj.Preferences;
 import botsnax.control.MotorKinematics;
 import botsnax.system.motor.MotorState;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import edu.wpi.first.units.BaseUnits;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Preferences;
 
 import java.util.Optional;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static java.lang.Double.NaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
-public record VelocityCalibration (double velocityToVoltageSlope, double minimumVoltage) implements MotorKinematics {
+public record VelocityCalibration (double velocityToVoltageSlope, Voltage minimumVoltage) implements MotorKinematics {
     @Override
-    public double getVoltageForVelocity(Measure<Velocity<Angle>> velocity, MotorState state) {
+    public Voltage getVoltageForVelocity(AngularVelocity velocity, MotorState state) {
         double velocityMagnitude = velocity.baseUnitMagnitude();
-        double absoluteVoltage = (abs(velocityMagnitude) * velocityToVoltageSlope) + minimumVoltage;
+        double absoluteVoltage = (abs(velocityMagnitude) * velocityToVoltageSlope) + minimumVoltage.baseUnitMagnitude();
 
-        return signum(velocityMagnitude) * absoluteVoltage;
+        return Volts.of(signum(velocityMagnitude) * absoluteVoltage);
     }
 
-    public Measure<Velocity<Angle>> getVelocityForVoltage(double voltage) {
-        return (BaseUnits.Angle.per(BaseUnits.Time)).of((voltage - minimumVoltage) / velocityToVoltageSlope);
+    public AngularVelocity getVelocityForVoltage(Voltage voltage) {
+        return (BaseUnits.AngleUnit.per(BaseUnits.TimeUnit)).of(voltage.minus(minimumVoltage).baseUnitMagnitude() / velocityToVoltageSlope);
     }
 
     public void save(String baseName) {
         Preferences.setDouble(baseName + ".FF.kv", velocityToVoltageSlope);
-        Preferences.setDouble(baseName + ".FF.ks", minimumVoltage);
+        Preferences.setDouble(baseName + ".FF.ks", minimumVoltage.baseUnitMagnitude());
     }
 
     public Slot0Configs asTalonConfig() {
         return new Slot0Configs()
-                .withKS(minimumVoltage)
-                .withKV(1.0 / (BaseUnits.Angle.per(BaseUnits.Time).of(1.0 / velocityToVoltageSlope).in(RotationsPerSecond)));
+                .withKS(minimumVoltage.baseUnitMagnitude())
+                .withKV(1.0 / (BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(1.0 / velocityToVoltageSlope).in(RotationsPerSecond)));
     }
 
     public static Optional<VelocityCalibration> load(String baseName) {
@@ -45,7 +45,7 @@ public record VelocityCalibration (double velocityToVoltageSlope, double minimum
         double ks = Preferences.getDouble(baseName + ".FF.ks", NaN);
 
         if (!Double.isNaN(kv) && !Double.isNaN(ks)) {
-            return Optional.of(new VelocityCalibration(kv, ks));
+            return Optional.of(new VelocityCalibration(kv, Volts.of(ks)));
         } else {
             return Optional.empty();
         }

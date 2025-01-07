@@ -1,40 +1,36 @@
 package botsnax.swerve.phoenix;
 
+import botsnax.swerve.sim.SwerveSim;
+import botsnax.vision.PoseEstimate;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import botsnax.vision.PoseEstimate;
-import botsnax.swerve.sim.SwerveSim;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
-import static botsnax.util.phoenix.CANcoderUtil.saveOffsetToZeroCurrentPosition;
 import static botsnax.swerve.phoenix.PhoenixSwerveDrivetrainBuilder.getEncoderOffsetPreferenceName;
+import static botsnax.util.phoenix.CANcoderUtil.saveOffsetToZeroCurrentPosition;
+import static edu.wpi.first.units.Units.*;
 import static java.lang.Double.NaN;
 
 public class PhoenixSwerveDriveSubsystem extends SubsystemBase {
     private final PhoenixSwerveDrivetrainBuilder builder;
-    protected final Optional<SwerveDrivetrain> drivetrainIfAny;
+    protected final Optional<PhoenixSwerveDrivetrain> drivetrainIfAny;
     protected final Optional<SwerveSim> simIfAny;
 
     private final StructPublisher<Pose2d> odometryPublisher;
@@ -110,24 +106,24 @@ public class PhoenixSwerveDriveSubsystem extends SubsystemBase {
 
     public Command storeEncoderOffsets() {
         Command[] commands = Arrays.stream(builder.getModuleConstants()).map(module -> {
-            try (CANcoder cancoder = new CANcoder(module.CANcoderId, builder.getDrivetrainConstants().CANbusName)) {
-                return runOnce(() -> saveOffsetToZeroCurrentPosition(getEncoderOffsetPreferenceName(module.CANcoderId), cancoder));
+            try (CANcoder cancoder = new CANcoder(module.EncoderId, builder.getDrivetrainConstants().CANBusName)) {
+                return runOnce(() -> saveOffsetToZeroCurrentPosition(getEncoderOffsetPreferenceName(module.EncoderId), cancoder));
             }
         }).toArray(Command[]::new);
 
         return new SequentialCommandGroup(commands);
     }
 
-    public SwerveModule getModule(int index) {
-        return drivetrainIfAny.map(drivetrain -> drivetrain.getModule(index))
-                .orElseThrow();
-    }
+//    public SwerveModule getModule(int index) {
+//        return drivetrainIfAny.map(drivetrain -> drivetrain.getModule(index))
+//                .orElseThrow();
+//    }
 
     public Command getContinuousDriveCommand(
             SwerveRequest.RobotCentric drive,
-            Supplier<Measure<Velocity<Distance>>> vxSupplier,
-            Supplier<Measure<Velocity<Distance>>> vySupplier,
-            Supplier<Measure<Velocity<Angle>>> vrSupplier) {
+            Supplier<LinearVelocity> vxSupplier,
+            Supplier<LinearVelocity> vySupplier,
+            Supplier<AngularVelocity> vrSupplier) {
         return applyRequest(() -> drive
                 .withVelocityX(vxSupplier.get().in(MetersPerSecond))
                 .withVelocityY(vySupplier.get().in(MetersPerSecond))

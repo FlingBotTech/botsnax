@@ -1,31 +1,32 @@
 package botsnax.swerve.sim;
 
 import edu.wpi.first.units.*;
+import edu.wpi.first.units.measure.*;
 
-public record AngularWheelDrivetrain(Wheels wheels, Measure<Mass> carriageMass, Measure<Mult<Mass, Mult<Distance, Distance>>> carriageMoment, double frictionCoefficient, double ratio) {
-    private Measure<Velocity<Angle>> convertVelocityFrom(Measure<Velocity<Angle>> velocity) {
-        return velocity.divide(ratio);
+public record AngularWheelDrivetrain(Wheels wheels, Mass carriageMass, MomentOfInertia carriageMoment, double frictionCoefficient, double ratio) {
+    private AngularVelocity convertVelocityFrom(AngularVelocity velocity) {
+        return velocity.div(ratio);
     }
 
-    private Measure<Velocity<Angle>> convertVelocityTo(Measure<Velocity<Angle>> velocity) {
+    private AngularVelocity convertVelocityTo(AngularVelocity velocity) {
         return velocity.times(ratio);
     }
 
-    private Measure<Mult<Mass, Mult<Distance, Distance>>> getMoment() {
+    private MomentOfInertia getMoment() {
         return carriageMoment.times(ratio);
     }
 
-    private Measure<Angle> convertPositionTo(Measure<Angle> position) {
+    private Angle convertPositionTo(Angle position) {
         return position.times(ratio);
     }
 
-    public Measure<Velocity<Angle>> getVelocityChange(Measure<Velocity<Angle>> finalVelocity, Measure<Velocity<Angle>> currentVelocity, Measure<Time> dt) {
+    public AngularVelocity getVelocityChange(AngularVelocity finalVelocity, AngularVelocity currentVelocity, Time dt) {
         WheelDrivetrain drivetrain = new WheelDrivetrain(wheels, carriageMass, getMoment(), frictionCoefficient);
 
         return convertVelocityTo(drivetrain.getVelocityChange(convertVelocityFrom(finalVelocity), convertVelocityFrom(currentVelocity), dt));
     }
 
-    public Measure<Angle> getAngleChange(Measure<Velocity<Angle>> finalVelocity, Measure<Velocity<Angle>> velocity, Measure<Time> dt) {
+    public Angle getAngleChange(AngularVelocity finalVelocity, AngularVelocity velocity, Time dt) {
         WheelDrivetrain drivetrain = new WheelDrivetrain(wheels, carriageMass, getMoment(), frictionCoefficient);
 
         return convertPositionTo(drivetrain.getAngleChange(convertVelocityFrom(finalVelocity), convertVelocityFrom(velocity), dt));

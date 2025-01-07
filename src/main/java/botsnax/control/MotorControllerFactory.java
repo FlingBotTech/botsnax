@@ -1,19 +1,21 @@
 package botsnax.control;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Time;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
+
+import static edu.wpi.first.units.Units.Volts;
 
 public class MotorControllerFactory {
-    public static MotorController createConstantController(double voltage) {
+    public static MotorController createConstantController(Voltage voltage) {
         return state -> voltage;
     }
 
     public static MotorController createSCurveController(
-            Measure<Angle> startAngle,
-            Measure<Angle> endAngle,
-            Measure<Velocity<Angle>> curveMaxVelocity,
+            Angle startAngle,
+            Angle endAngle,
+            AngularVelocity curveMaxVelocity,
             SetpointController setpointController) {
 
         MotorController pathController = PathMotorController.ofPath(
@@ -28,12 +30,12 @@ public class MotorControllerFactory {
     }
 
     public static MotorController createSCurveController(
-            Measure<Angle> startAngle,
-            Measure<Angle> endAngle,
-            Measure<Velocity<Angle>> curveMaxVelocity,
-            Measure<Time> dampingHalfLife,
-            Measure<Velocity<Angle>> velocityPerVolt,
-            Measure<Time> timeIncrement,
+            Angle startAngle,
+            Angle endAngle,
+            AngularVelocity curveMaxVelocity,
+            Time dampingHalfLife,
+            AngularVelocity velocityPerVolt,
+            Time timeIncrement,
             SetpointController setpointController) {
 
         MotorController pathController = PathMotorController.ofPath(
@@ -46,6 +48,6 @@ public class MotorControllerFactory {
 
         MotorController damper = Damper.create(dampingHalfLife, velocityPerVolt, timeIncrement);
 
-        return new CompositeMotorController(pathController , state -> 0);
+        return new CompositeMotorController(pathController , state -> Volts.of(0));
     }
 }

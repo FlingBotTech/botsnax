@@ -1,19 +1,18 @@
 package botsnax.system.motor;
 
-import botsnax.system.encoder.Encoder;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Time;
-import edu.wpi.first.units.Velocity;
 import botsnax.flywheel.Flywheel;
+import botsnax.system.encoder.Encoder;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.*;
 
 public interface MotorSystem extends Flywheel {
     void stop();
 
-    default MotorState getState(Measure<Time> time) {
+    default MotorState getState(Time time) {
         return new MotorState(getVoltage(), time, getAngle(), getVelocity() );
     }
 
@@ -39,22 +38,22 @@ public interface MotorSystem extends Flywheel {
             }
 
             @Override
-            public Measure<Angle> getAngle() {
+            public Angle getAngle() {
                 return encoder.getAngle();
             }
 
             @Override
-            public Measure<Velocity<Angle>> getVelocity() {
+            public AngularVelocity getVelocity() {
                 return encoder.getVelocity();
             }
 
             @Override
-            public double getVoltage() {
+            public Voltage getVoltage() {
                 return MotorSystem.this.getVoltage();
             }
 
             @Override
-            public void setVoltage(double voltage) {
+            public void setVoltage(Voltage voltage) {
                 MotorSystem.this.setVoltage(voltage);
             }
 
@@ -64,7 +63,7 @@ public interface MotorSystem extends Flywheel {
             }
 
             @Override
-            public void setAngle(Measure<Angle> angle) {
+            public void setAngle(Angle angle) {
                 if (allowSetAngle) {
                     encoder.setAngle(angle);
                 }
@@ -91,26 +90,26 @@ public interface MotorSystem extends Flywheel {
         }
 
         @Override
-        public Measure<Angle> getAngle() {
+        public Angle getAngle() {
             return Degrees.of(0);
         }
 
         @Override
-        public Measure<Velocity<Angle>> getVelocity() {
+        public AngularVelocity getVelocity() {
             return Degrees.of(0).per(Second);
         }
 
         @Override
-        public void setAngle(Measure<Angle> angle) {
+        public void setAngle(Angle angle) {
         }
 
         @Override
-        public void setVoltage(double voltage) {
+        public void setVoltage(Voltage voltage) {
         }
 
         @Override
-        public double getVoltage() {
-            return 0;
+        public Voltage getVoltage() {
+            return Volts.of(0);
         }
     };
 }

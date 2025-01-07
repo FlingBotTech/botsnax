@@ -1,23 +1,21 @@
 package botsnax.arm.commands.calibrate;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Unit;
 import botsnax.arm.commands.AwaitStabilityCommand;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.measure.Voltage;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static edu.wpi.first.units.ImmutableMeasure.ofRelativeUnits;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.*;
 import static java.util.Arrays.stream;
 import static org.ejml.simple.SimpleMatrix.filled;
 
 public class ArmPositionResults {
-    private static final Unit<Angle> ANGLE_UNITS = Degrees;
+    private static final AngleUnit ANGLE_UNITS = Degrees;
 
     private final List<AwaitStabilityCommand.Result> results;
 
@@ -34,7 +32,7 @@ public class ArmPositionResults {
     }
 
     private ArmGravityController iterate(ArmGravityController armGravityController) {
-        double gain = armGravityController.gain();
+        Voltage gain = armGravityController.gain();
         double offset = armGravityController.offset().in(Radians);
 
         SimpleMatrix error = new SimpleMatrix(1, this.results.size());
@@ -44,9 +42,9 @@ public class ArmPositionResults {
             AwaitStabilityCommand.Result r = results.get(i);
             double position = r.angle().in(Radians);
 
-            error.set(0, i, (r.voltage() - (gain * cos(position - offset))));
+            error.set(0, i, (r.voltage().minus(gain.times(cos(position - offset)))).baseUnitMagnitude());
             partials.set(i, 0, cos(position - offset));
-            partials.set(i, 1, gain * sin(position - offset));
+            partials.set(i, 1, gain.times(sin(position - offset)).baseUnitMagnitude());
         }
 
         SimpleMatrix errorSquared = error.mult(error.transpose());
@@ -56,10 +54,10 @@ public class ArmPositionResults {
                 .mult(errorSquared)
                 .elementMult(filled(2, 1, -1));
 
-        double gain2 = solution.get(0, 0) + gain;
+        Voltage gain2 = gain.plus(Volts.of(solution.get(0, 0)));
         double offset2 = solution.get(1, 0) + offset;
 
-        return new ArmGravityController(gain2, ofRelativeUnits(offset2, Radians));
+        return new ArmGravityController(gain2, Radians.of(offset2));
     }
 
     private static Stats getStats(double[] values) {
@@ -85,19 +83,20 @@ public class ArmPositionResults {
         Stats offsetStats = getFilteredStats(offsets);
 
         double[] gains = calibrations.stream()
-                .mapToDouble(ArmGravityController::gain)
+                .map(ArmGravityController::gain)
+                .mapToDouble(Voltage::baseUnitMagnitude)
                 .toArray();
         Stats gainStats = getFilteredStats(gains);
 
-        return new ArmGravityController(gainStats.getMean(), ofRelativeUnits(offsetStats.getMean(), ANGLE_UNITS));
+        return new ArmGravityController(Volts.of(gainStats.getMean()), ANGLE_UNITS.of(offsetStats.getMean()));
     }
 
     public ArmGravityController solveForGravity() {
-        double maxVoltage = results.stream().mapToDouble(result -> result.voltage()).max().orElseThrow();
+        double maxVoltage = results.stream().mapToDouble(result -> result.voltage().baseUnitMagnitude()).max().orElseThrow();
         AwaitStabilityCommand.Result maxResult = results.stream()
-                .filter(result -> result.voltage() == maxVoltage).findFirst().orElseThrow();
+                .filter(result -> result.voltage().baseUnitMagnitude() == maxVoltage).findFirst().orElseThrow();
         List<AwaitStabilityCommand.Result> others = results.stream()
-                .filter(result -> result.voltage() != maxVoltage).toList();
+                .filter(result -> result.voltage().baseUnitMagnitude() != maxVoltage).toList();
         List<AwaitStabilityCommand.Result> resultsToUse = Arrays.asList(
                 others.get(0),
                 maxResult,
@@ -109,7 +108,7 @@ public class ArmPositionResults {
 
     private ArmGravityController doSolveForGravity() {
         ArrayList<ArmGravityController> calibrations = new ArrayList<>();
-        ArmGravityController previous = new ArmGravityController(0, ofRelativeUnits(0, ANGLE_UNITS));
+        ArmGravityController previous = new ArmGravityController(Volts.of(0),  ANGLE_UNITS.of(0));
 
         for (int i = 0; i < 100; i++) {
             ArmGravityController calibration = iterate(previous);

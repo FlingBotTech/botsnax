@@ -1,8 +1,8 @@
 package botsnax.swerve.factory;
 
 import botsnax.swerve.SwerveCalibration;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -18,9 +18,9 @@ import static java.util.Arrays.stream;
 
 public abstract class SwerveDrivetrainFactory {
     protected final SwerveDrivetrainConstants drivetrainConstants;
-    protected final SwerveModuleConstants[] moduleConstants;
+    protected final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
 
-    protected SwerveDrivetrainFactory(SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants ... moduleConstants) {
+    protected SwerveDrivetrainFactory(SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
         this.drivetrainConstants = drivetrainConstants;
         this.moduleConstants = moduleConstants;
     }
@@ -67,6 +67,6 @@ public abstract class SwerveDrivetrainFactory {
 
     protected abstract SwerveModulePosition getPosition(SwerveModule module);
     protected abstract Gyro createGyro();
-    protected abstract SwerveModule createModule(SwerveModuleConstants moduleConstants);
+    protected abstract SwerveModule createModule(SwerveModuleConstants<?, ?, ?> moduleConstants);
     protected abstract PeriodicUpdater<SwerveOdometryUpdater> createPeriodicUpdater(SwerveOdometryUpdater odometryUpdater, Gyro gyro, SwerveModule[] modules);
 }

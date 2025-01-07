@@ -1,19 +1,17 @@
 package botsnax.swerve;
 
+import botsnax.swerve.sim.IdealizedSwerveSim;
+import botsnax.swerve.sim.SwerveDrivetrain;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
-import botsnax.swerve.sim.IdealizedSwerveSim;
-import botsnax.swerve.sim.SwerveDrivetrain;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
@@ -65,7 +63,7 @@ public class IdealizedDriveSubsystem extends SubsystemBase {
     public Command getJoystickControlCommand(CommandPS4Controller joystick) {
         return run(() -> {
             final double deadband = 0.1;
-            final Measure<Velocity<Angle>> maxOmega = RadiansPerSecond.of(2.5 * PI);
+            final AngularVelocity maxOmega = RadiansPerSecond.of(2.5 * PI);
 
             double lx = joystick.getLeftX();
             double ly = joystick.getLeftY();
