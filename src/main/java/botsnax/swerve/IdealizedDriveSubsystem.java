@@ -1,7 +1,7 @@
 package botsnax.swerve;
 
 import botsnax.swerve.sim.IdealizedSwerveSim;
-import botsnax.swerve.sim.SwerveDrivetrain;
+import botsnax.swerve.sim.IdealizedSwerveDrivetrain;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -18,11 +18,11 @@ import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static java.lang.Math.*;
 
 public class IdealizedDriveSubsystem extends SubsystemBase {
-    private final SwerveDrivetrain drivetrain;
+    private final IdealizedSwerveDrivetrain drivetrain;
     private final ChassisSpeeds requestedVelocity;
     protected final IdealizedSwerveSim sim;
 
-    public IdealizedDriveSubsystem(SwerveDrivetrain drivetrain, Pose2d initialPose) {
+    public IdealizedDriveSubsystem(IdealizedSwerveDrivetrain drivetrain, Pose2d initialPose) {
         this.drivetrain = drivetrain;
 
         sim = drivetrain.createSim(initialPose);

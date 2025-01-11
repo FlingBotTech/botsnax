@@ -1,41 +1,88 @@
 package botsnax.system.motor.phoenix;
 
+import botsnax.swerve.sim.PerfectSteering;
+import botsnax.system.motor.MotorSim;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import botsnax.system.Gearbox;
 import botsnax.system.encoder.phoenix.TalonSRXAbsoluteEncoder;
 import botsnax.system.motor.AngleSetter;
 import botsnax.system.motor.MotorSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
+import static java.lang.Math.round;
 
 public class TalonSRXMotor implements MotorSystem {
-    private static final double ENCODER_RESOLUTION = 4096.0;
+    public class Sim implements MotorSim {
+        @Override
+        public void setSupplyVoltage(Voltage voltage) {
+            motor.getSimCollection().setBusVoltage(voltage.in(Volts));
+        }
+
+        @Override
+        public void setInverted(boolean isInverted) {
+        }
+
+        @Override
+        public Voltage getMotorVoltage() {
+            return Volts.of(motor.getSimCollection().getMotorOutputLeadVoltage());
+        }
+
+        @Override
+        public void setRawPosition(Angle angle) {
+            motor.getSimCollection().setQuadratureRawPosition((int) round(angle.in(Rotations) * ENCODER_RESOLUTION));
+        }
+
+        @Override
+        public void setVelocity(AngularVelocity velocity) {
+            motor.getSimCollection().setQuadratureVelocity((int) round(velocity.in(RotationsPerSecond) * ENCODER_RESOLUTION / VELOCITY_TIME_UNITS_PER_SECOND));
+        }
+    }
+
+    public static final double ENCODER_RESOLUTION = 4096.0;
+    public static final double VELOCITY_TIME_UNITS_PER_SECOND = 10;
     private static final int PRIMARY_CLOSED_LOOP_INDEX  = 0;
-    private static final double VELOCITY_TIME_UNITS_PER_SECOND = 10;
 
     public static AngleSetter PID_CONTROL = (angle, motor) -> {
-        TalonSRX talonSRX = ((TalonSRXMotor) motor).getMotor();
-        double currentAngle = talonSRX.getSelectedSensorPosition() / ENCODER_RESOLUTION;
-        double errorRotations =  currentAngle - angle.getRotations();
-        double fullRotations = Math.round(errorRotations);
-        double setpointRotations = angle.getRotations() + fullRotations;
+        if (motor instanceof TalonSRXMotor talonSRX) {
+            double currentAngle = talonSRX.get().getSelectedSensorPosition() / ENCODER_RESOLUTION;
+            double errorRotations = currentAngle - angle.getRotations();
+            double fullRotations = round(errorRotations);
+            double setpointRotations = angle.getRotations() + fullRotations;
 
-        talonSRX.set(TalonSRXControlMode.Position, setpointRotations * ENCODER_RESOLUTION);
+            talonSRX.get().set(TalonSRXControlMode.Position, setpointRotations * ENCODER_RESOLUTION);
+        } else if (motor instanceof PerfectSteering perfectSteering) {
+            perfectSteering.setAngle(Radians.of(angle.getRadians()));
+        }
     };
 
     private final TalonSRX motor;
+    private final DCMotor dcMotor;
+    private final Sim sim;
     private double offset = 0;
 
-    public TalonSRXMotor(TalonSRX motor) {
+    public TalonSRXMotor(TalonSRX motor, DCMotor dcMotor) {
         this.motor = motor;
+        this.sim = isSimulation() ? new Sim() : null;
+        this.dcMotor = dcMotor;
     }
 
     public TalonSRX get() {
         return motor;
+    }
+
+    @Override
+    public DCMotor getDCMotor() {
+        return dcMotor;
+    }
+
+    public MotorSim getSim() {
+        return sim;
     }
 
     @Override

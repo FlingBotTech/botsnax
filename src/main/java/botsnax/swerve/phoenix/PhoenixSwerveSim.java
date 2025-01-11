@@ -39,6 +39,7 @@ public class PhoenixSwerveSim extends SimSwerveDrivetrain {
 
             steerMotor.Orientation = m_modules[i].SteerMotorInverted ? ChassisReference.Clockwise_Positive : ChassisReference.CounterClockwise_Positive;
             driveMotor.Orientation = m_modules[i].DriveMotorInverted ? ChassisReference.Clockwise_Positive : ChassisReference.CounterClockwise_Positive;
+            cancoder.Orientation = m_modules[i].EncoderInverted ? ChassisReference.Clockwise_Positive : ChassisReference.CounterClockwise_Positive;
 
             steerMotor.setSupplyVoltage(supplyVoltage);
             driveMotor.setSupplyVoltage(supplyVoltage);

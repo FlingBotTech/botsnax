@@ -1,15 +1,16 @@
 package botsnax.swerve.phoenix;
 
+import botsnax.system.Gearbox;
+import botsnax.system.motor.phoenix.TalonSRXMotor;
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import botsnax.system.Gearbox;
-import botsnax.system.motor.phoenix.TalonSRXMotor;
+import edu.wpi.first.math.system.plant.DCMotor;
 
 public class TalonSRXSteering {
-    public static Gearbox create(SwerveModuleConstants<?, ?, ?> constants) {
+    public static Gearbox create(SwerveModuleConstants<?, ?, ?> constants, DCMotor dcMotor) {
         TalonSRX motor = new TalonSRX(constants.SteerMotorId);
 
         TalonSRXConfiguration config = new TalonSRXConfiguration();
@@ -31,12 +32,13 @@ public class TalonSRXSteering {
             System.err.println("Failed to configure motor " + constants.SteerMotorId + ": " + error);
         }
 
+
         int absolutePosition = motor.getSensorCollection().getPulseWidthPosition();
         error = motor.setSelectedSensorPosition(absolutePosition + constants.EncoderOffset, 0, 1000);
         if (error != ErrorCode.OK) {
             System.err.println("Failed to set sensor position for motor " + constants.SteerMotorId + ": " + error);
         }
 
-        return new TalonSRXMotor(motor).asGearbox();
+        return new TalonSRXMotor(motor, dcMotor).asGearbox();
     }
 }

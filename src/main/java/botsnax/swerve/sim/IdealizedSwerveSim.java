@@ -5,39 +5,41 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.units.*;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static edu.wpi.first.math.VecBuilder.fill;
 import static edu.wpi.first.units.Units.*;
 
 public class IdealizedSwerveSim implements SwerveSim {
-    private final SwerveDrivetrain drivetrain;
+    private final IdealizedSwerveDrivetrain drivetrain;
 
     private ChassisSpeeds velocity;
     private final Field2d field;
 
-    public IdealizedSwerveSim(SwerveDrivetrain drivetrain, Pose2d initialPose) {
+    public IdealizedSwerveSim(IdealizedSwerveDrivetrain drivetrain, Pose2d initialPose) {
         this.drivetrain = drivetrain;
         this.field = new Field2d();
 
         velocity = new ChassisSpeeds();
 
         field.setRobotPose(initialPose);
-        SmartDashboard.putData(field);
     }
 
     public Pose2d getPose() {
         return field.getRobotPose();
     }
 
+    public void setPose(Pose2d pose) {
+        field.setRobotPose(pose);
+    }
+
     public ChassisSpeeds getVelocity() {
         return velocity;
     }
 
-    public void update(ChassisSpeeds requestedVelocity, Time dt) {
+    public void update(ChassisSpeeds requestedVelocityRobotCentric, Time dt) {
+        ChassisSpeeds requestedVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(requestedVelocityRobotCentric, getPose().getRotation());
         Vector<N2> linearVelocity = fill(velocity.vxMetersPerSecond, velocity.vyMetersPerSecond);
         Vector<N2> requestedLinearVelocity = fill(requestedVelocity.vxMetersPerSecond, requestedVelocity.vyMetersPerSecond);
 

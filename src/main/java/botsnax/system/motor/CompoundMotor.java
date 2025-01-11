@@ -1,16 +1,52 @@
 package botsnax.system.motor;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
 import java.util.function.Consumer;
 
+import static botsnax.util.DCMotorUtil.withMotorCount;
+import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
+
 public class CompoundMotor<T extends MotorSystem> implements MotorSystem {
+    private class Sim implements MotorSim {
+        @Override
+        public Voltage getMotorVoltage() {
+            return getPrimary().getSim().getMotorVoltage();
+        }
+
+        @Override
+        public void setSupplyVoltage(Voltage voltage) {
+            getPrimary().getSim().setSupplyVoltage(voltage);
+        }
+
+        @Override
+        public void setInverted(boolean isInverted) {
+            getPrimary().getSim().setInverted(isInverted);
+        }
+
+        @Override
+        public void setRawPosition(Angle angle) {
+            getPrimary().getSim().setRawPosition(angle);
+        }
+
+        @Override
+        public void setVelocity(AngularVelocity velocity) {
+            getPrimary().getSim().setVelocity(velocity);
+        }
+    }
+
     private final T[] motors;
+    private final MotorSim sim;
+    private final DCMotor dcMotor;
 
     public CompoundMotor(T[] motors) {
         this.motors = motors;
+
+        sim = isSimulation() ? new Sim() : null;
+        dcMotor = withMotorCount(getPrimary().getDCMotor(), motors.length);
     }
 
     public T getPrimary() {
@@ -20,6 +56,16 @@ public class CompoundMotor<T extends MotorSystem> implements MotorSystem {
     @Override
     public int getDeviceID() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MotorSim getSim() {
+        return sim;
+    }
+
+    @Override
+    public DCMotor getDCMotor() {
+        return dcMotor;
     }
 
     @Override

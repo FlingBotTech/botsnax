@@ -1,10 +1,13 @@
 package botsnax.swerve.factory;
 
 import botsnax.swerve.SwerveModule;
+import botsnax.swerve.SwerveModuleStateOptimizer;
 import botsnax.swerve.SwerveOdometryUpdater;
 import botsnax.swerve.phoenix.TalonFXDrive;
 import botsnax.swerve.phoenix.TalonSRXSteering;
+import botsnax.swerve.sim.PerfectSteering;
 import botsnax.system.Gyro;
+import botsnax.system.motor.LinearVelocitySetter;
 import botsnax.system.motor.phoenix.PigeonGyro;
 import botsnax.system.motor.phoenix.TalonFXMotor;
 import botsnax.system.motor.phoenix.TalonSRXMotor;
@@ -20,28 +23,40 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.AngularVelocityUnit;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Timer;
 
+import static botsnax.system.motor.phoenix.TalonSRXMotor.PID_CONTROL;
 import static com.ctre.phoenix.motorcontrol.StatusFrameEnhanced.Status_2_Feedback0;
 import static com.ctre.phoenix.motorcontrol.StatusFrameEnhanced.Status_3_Quadrature;
 import static edu.wpi.first.math.geometry.Rotation2d.fromRadians;
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static edu.wpi.first.wpilibj.Threads.setCurrentThreadPriority;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-public class TalonSRXSwerveDrivetrainFactory extends SwerveDrivetrainFactory {
+public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFactory {
     protected static final int START_THREAD_PRIORITY = 1;
     private static final int DEFAULT_UPDATE_FREQUENCY = 100;
 
-    public TalonSRXSwerveDrivetrainFactory(SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants ... moduleConstants) {
-        super(drivetrainConstants, moduleConstants);
+    private final LinearVelocity maxSpeed;
+
+    public TalonSRXSwerveDrivetrainFactory(Mass mass, LinearVelocity maxSpeed, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+        super(mass, drivetrainConstants, moduleConstants);
+        this.maxSpeed = maxSpeed;
+    }
+
+    @Override
+    protected SwerveModule.ApplyMode getDefaultApplyode() {
+        return new SwerveModule.ApplyMode(
+                SwerveModule :: getState,
+                LinearVelocitySetter.createOpenLoop(maxSpeed),
+                PID_CONTROL,
+                new SwerveModuleStateOptimizer()
+        );
     }
 
     @Override
@@ -61,9 +76,11 @@ public class TalonSRXSwerveDrivetrainFactory extends SwerveDrivetrainFactory {
     }
 
     @Override
-    protected SwerveModule createModule(SwerveModuleConstants constants) {
+    protected SwerveModule createModule(SwerveModuleConstants<?, ?, ?> constants) {
         return new SwerveModule(
-                TalonSRXSteering.create(constants),
+                isSimulation() ?
+                        PerfectSteering.createGearbox() :
+                        TalonSRXSteering.create(constants, DCMotor.getVex775Pro(1)),
                 TalonFXDrive.create(constants, ""),
                 LinearAngularConversion.ofWheelRadiusGearRatio(
                         Inches.of(constants.WheelRadius),
@@ -85,8 +102,9 @@ public class TalonSRXSwerveDrivetrainFactory extends SwerveDrivetrainFactory {
                     TalonFX driveMotor = ((TalonFXMotor) module.getDrive()).get();
                     setUpdateFrequency(getUpdateFrequency(), driveMotor.getPosition(), driveMotor.getVelocity());
 
-                    TalonSRX steerMotor = ((TalonSRXMotor) module.getSteering().getMotor()).get();
-                    setUpdatePeriod(getUpdateFrequency(), steerMotor, Status_2_Feedback0, Status_3_Quadrature);
+                    if (module.getSteering().getMotor() instanceof TalonSRXMotor talonSRXMotor) {
+                        setUpdatePeriod(getUpdateFrequency(), talonSRXMotor.get(), Status_2_Feedback0, Status_3_Quadrature);
+                    }
                 }
             }
 

@@ -2,6 +2,7 @@ package botsnax.system.motor;
 
 import botsnax.flywheel.Flywheel;
 import botsnax.system.encoder.Encoder;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
@@ -20,11 +21,23 @@ public interface MotorSystem extends Flywheel {
         return new GearedMotorSystem(this, gearRatio);
     }
 
+    MotorSim getSim();
+
     default MotorSystem withEncoder(Encoder encoder, boolean allowSetAngle) {
         return new MotorSystem() {
             @Override
             public int getDeviceID() {
                 return MotorSystem.this.getDeviceID();
+            }
+
+            @Override
+            public MotorSim getSim() {
+                return MotorSystem.this.getSim();
+            }
+
+            @Override
+            public DCMotor getDCMotor() {
+                return MotorSystem.this.getDCMotor();
             }
 
             @Override
@@ -71,10 +84,20 @@ public interface MotorSystem extends Flywheel {
         };
     }
 
-    public static final MotorSystem STUB = new MotorSystem() {
+    MotorSystem STUB = new MotorSystem() {
         @Override
         public int getDeviceID() {
             return -1;
+        }
+
+        @Override
+        public MotorSim getSim() {
+            return MotorSim.STUB;
+        }
+
+        @Override
+        public DCMotor getDCMotor() {
+            return DCMotor.getKrakenX60(1);
         }
 
         @Override

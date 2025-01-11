@@ -1,6 +1,6 @@
 package botsnax.system.motor.phoenix;
 
-import com.ctre.phoenix6.sim.TalonFXSimState;
+import botsnax.system.motor.MotorSim;
 import botsnax.system.motor.CompoundMotor;
 
 public class TalonFXCompoundMotor extends CompoundMotor<TalonFXMotor> implements TalonFXMotorSystem {
@@ -8,7 +8,7 @@ public class TalonFXCompoundMotor extends CompoundMotor<TalonFXMotor> implements
         super(motors);
     }
 
-    public TalonFXSimState getSimState() {
-        return getPrimary().getSimState();
+    public MotorSim getSim() {
+        return getPrimary().getSim();
     }
 }

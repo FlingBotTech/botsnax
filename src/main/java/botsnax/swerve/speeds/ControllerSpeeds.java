@@ -1,16 +1,19 @@
-package botsnax.swerve;
+package botsnax.swerve.speeds;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.XboxController;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.ctre.phoenix6.Utils.isSimulation;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.wpilibj.DriverStation.getAlliance;
 import static java.lang.Math.pow;
 
 public class ControllerSpeeds {
@@ -40,9 +43,13 @@ public class ControllerSpeeds {
             double controllerDeadband,
             LinearVelocity maxSpeed,
             AngularVelocity maxAngularSpeed) {
+
+        final boolean isRedAlliance = getAlliance().map(a -> a == Alliance.Red).orElse(true);
+        final double multiplier = isRedAlliance ? 1 : -1;
+
         return ControllerSpeeds.of(
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
+                isSimulation() ? controller::getLeftX : () -> multiplier * controller.getLeftY(),
+                isSimulation() ? () -> -controller.getLeftY() : () -> multiplier * controller.getLeftX(),
                 () -> -controller.getRightX(),
                 controllerDeadband,
                 maxSpeed,

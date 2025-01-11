@@ -1,5 +1,6 @@
 package botsnax.system.motor.phoenix;
 
+import botsnax.system.motor.MotorSim;
 import botsnax.system.motor.MotorSystem;
 import botsnax.util.phoenix.PhoenixUtil;
 import com.ctre.phoenix6.StatusCode;
@@ -7,21 +8,60 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.ChassisReference;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.RobotBase;
+
+import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 
 public class TalonFXMotor implements MotorSystem {
+    private class Sim implements MotorSim {
+        @Override
+        public void setSupplyVoltage(Voltage voltage) {
+            motor.getSimState().setSupplyVoltage(voltage.baseUnitMagnitude());
+        }
+
+        @Override
+        public void setInverted(boolean isInverted) {
+            motor.getSimState().Orientation = isInverted ? ChassisReference.Clockwise_Positive : ChassisReference.CounterClockwise_Positive;
+        }
+
+        @Override
+        public Voltage getMotorVoltage() {
+            return Volts.of(motor.getSimState().getMotorVoltage());
+        }
+
+        @Override
+        public void setRawPosition(Angle angle) {
+            motor.getSimState().setRawRotorPosition(angle.in(Rotations));
+        }
+
+        @Override
+        public void setVelocity(AngularVelocity velocity) {
+            motor.getSimState().setRotorVelocity(velocity.in(RotationsPerSecond));
+        }
+    }
+
     private final TalonFX motor;
     private final double invert;
+    private final Sim sim;
+    private final DCMotor dcMotor;
 
     public TalonFXMotor(TalonFX motor, boolean inverted) {
+        this(motor, inverted, DCMotor.getKrakenX60(1));
+    }
+
+    public TalonFXMotor(TalonFX motor, boolean inverted, DCMotor dcMotor) {
         this.motor = motor;
 
-        if (RobotBase.isSimulation()) {
+        if (isSimulation()) {
             setInverted(inverted);
+            sim = new Sim();
+        } else {
+            sim = null;
         }
 
         boolean motorInverted = getInverted();
@@ -31,6 +71,12 @@ public class TalonFXMotor implements MotorSystem {
         }
 
         this.invert = (inverted != motorInverted) ? -1 : 1;
+        this.dcMotor = dcMotor;
+    }
+
+    @Override
+    public DCMotor getDCMotor() {
+        return dcMotor;
     }
 
     private void setInverted(boolean inverted) {
@@ -76,8 +122,8 @@ public class TalonFXMotor implements MotorSystem {
         motor.setNeutralMode(NeutralModeValue.Brake);
     }
 
-    public TalonFXSimState getSimState() {
-        return motor.getSimState();
+    public MotorSim getSim() {
+        return sim;
     }
 
     @Override

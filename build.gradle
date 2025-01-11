@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "java-library"
     id "maven-publish"
-    id "edu.wpi.first.GradleRIO" version "2025.1.1"
+    id "edu.wpi.first.GradleRIO" version "2025.2.1"
 }
 
 def javaVersion = JavaVersion.VERSION_17
@@ -39,7 +39,7 @@ publishing {
         robotCommon(MavenPublication) {
             groupId = 'flingBotTech'
             artifactId = 'botsnax'
-            version = '0.1'
+            version = '2025.0.2'
 
             pom {
                 name = 'Botsnax'
@@ -61,8 +61,8 @@ publishing {
             url = uri("https://maven.pkg.github.com/flingbottech/botsnax")
 
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.token") ?: System.getenv("TOKEN")
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

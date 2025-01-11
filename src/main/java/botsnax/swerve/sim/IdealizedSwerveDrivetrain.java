@@ -10,15 +10,14 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 
-import java.util.function.Function;
-
+import static botsnax.util.DCMotorUtil.withMotorCount;
 import static edu.wpi.first.units.Units.*;
 
-public class SwerveDrivetrain {
+public class IdealizedSwerveDrivetrain {
     private final LinearWheelDrivetrain linearDrive;
     private final AngularWheelDrivetrain angularDrive;
 
-    public SwerveDrivetrain(
+    public IdealizedSwerveDrivetrain(
             Wheels wheels,
             Mass carriageMass,
             MomentOfInertia carriageMoment,
@@ -46,9 +45,9 @@ public class SwerveDrivetrain {
         return angularDrive;
     }
 
-    public static SwerveDrivetrain ofRectangularChassis(
+    public static IdealizedSwerveDrivetrain ofRectangularChassis(
             SwerveModuleConstants<?, ?, ?>[] modules,
-            Function<Integer,DCMotor> motorSupplier,
+            DCMotor motor,
             Mass carriageMass) {
         if (modules.length != 4) {
             throw new IllegalArgumentException("Number of modules must be 4");
@@ -57,10 +56,10 @@ public class SwerveDrivetrain {
         SwerveModuleConstants<?, ?, ?> module = modules[0];
         Distance wheelToCenterDistance = Meters.of(VecBuilder.fill(module.LocationX, module.LocationY).norm());
 
-        return new SwerveDrivetrain(
+        return new IdealizedSwerveDrivetrain(
                 new Wheels(
                         4,
-                        motorSupplier,
+                        count -> withMotorCount(motor, count),
                         module.DriveMotorGearRatio,
                         Inches.of(module.WheelRadius),
                         KilogramSquareMeters.of(0),
