@@ -8,6 +8,7 @@ import botsnax.swerve.sim.IdealizedSwerveSim;
 import botsnax.system.Gyro;
 import botsnax.util.PeriodicUpdater;
 import botsnax.util.SimRunner;
+import botsnax.vision.PoseEstimate;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -16,12 +17,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Mass;
 
 import java.util.function.Function;
 
-import static edu.wpi.first.units.Units.Milliseconds;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static edu.wpi.first.wpilibj.RobotController.getBatteryVoltage;
 import static java.util.Arrays.stream;
@@ -81,25 +83,30 @@ public abstract class GenericSwerveDrivetrainFactory {
 
         PoseLogger poseLogger = new PoseLogger();
 
+        DoublePublisher poseEstimateErrorPublisher = NetworkTableInstance.getDefault().getDoubleTopic("PoseEstimateError").publish();
+
         SwerveOdometryUpdater odometryUpdater = new SwerveOdometryUpdater(
                 gyro,
                 modules,
                 this::getPosition,
-                pose -> {
-                    if (isSimulation()) {
-                        idealizedSwerveSim.setPose(pose);
-                    } else {
-                        poseEstimator.resetPose(pose);
-                    }
-                },
+                poseEstimator::resetPose,
                 (heading, modulePositions) -> {
+                    poseEstimator.update(heading, modulePositions);
+
+                    Pose2d estimatedPose = poseEstimator.getEstimatedPosition();
+
                     if (isSimulation()) {
-                        return idealizedSwerveSim.getPose();
+                        Pose2d actualPose = idealizedSwerveSim.getPose();
+                        double error = actualPose.getTranslation().minus(estimatedPose.getTranslation()).getNorm();
+
+                        poseEstimateErrorPublisher.set(error);
+
+                        return actualPose;
                     } else {
-                        poseEstimator.update(heading, modulePositions);
-                        return poseEstimator.getEstimatedPosition();
+                        return estimatedPose;
                     }
                 },
+                measurement -> poseEstimator.addVisionMeasurement(measurement.pose(), measurement.timestamp().in(Seconds), measurement.stdDevs()),
                 poseLogger
         );
 
@@ -128,8 +135,18 @@ public abstract class GenericSwerveDrivetrainFactory {
             }
 
             @Override
+            public Pose2d getSimPose() {
+                return idealizedSwerveSim.getPose();
+            }
+
+            @Override
             public void setPose(Pose2d pose) {
                 periodicUpdater.apply(odometryUpdater -> odometryUpdater.setPose(pose));
+            }
+
+            @Override
+            public void setSimPose(Pose2d pose) {
+                idealizedSwerveSim.setPose(pose);
             }
 
             @Override
@@ -144,6 +161,11 @@ public abstract class GenericSwerveDrivetrainFactory {
                                         drivetrain,
                                         defaultApplyMode
                                 )));
+            }
+
+            @Override
+            public void addVisionMeasurement(PoseEstimate estimate) {
+                periodicUpdater.apply(updater -> updater.addVisionMeasurement(estimate));
             }
         };
     }

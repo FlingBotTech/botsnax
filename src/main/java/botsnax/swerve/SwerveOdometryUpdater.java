@@ -2,6 +2,7 @@ package botsnax.swerve;
 
 import botsnax.system.Gyro;
 import botsnax.util.Updatable;
+import botsnax.vision.PoseEstimate;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -58,6 +59,7 @@ public class SwerveOdometryUpdater implements Updatable {
     private final Function<SwerveModule, SwerveModulePosition> positionGetter;
     private final Consumer<Pose2d> poseSetter;
     private final SwervePositionListener poseEstimator;
+    private final Consumer<PoseEstimate> visionMeasurementConsumer;
     private final PoseUpdateListener poseObserver;
 
     private final SwerveModulePosition[] positionBuffer;
@@ -70,12 +72,14 @@ public class SwerveOdometryUpdater implements Updatable {
             Function<SwerveModule,SwerveModulePosition> positionGetter,
             Consumer<Pose2d> poseSetter,
             SwervePositionListener poseEstimator,
+            Consumer<PoseEstimate> visionMeasurementConsumer,
             PoseUpdateListener poseObserver) {
         this.gyro = gyro;
         this.modules = modules;
         this.positionGetter = positionGetter;
         this.poseSetter = poseSetter;
         this.poseEstimator = poseEstimator;
+        this.visionMeasurementConsumer = visionMeasurementConsumer;
         this.poseObserver = poseObserver;
 
         this.positionBuffer = new SwerveModulePosition[modules.length];
@@ -100,5 +104,9 @@ public class SwerveOdometryUpdater implements Updatable {
 
     public void setModuleUpdater(PoseUpdateListener poseUpdateListener) {
         this.moduleUpdater = poseUpdateListener;
+    }
+
+    public void addVisionMeasurement(PoseEstimate estimate) {
+        visionMeasurementConsumer.accept(estimate);
     }
 }
