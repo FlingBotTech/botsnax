@@ -14,16 +14,17 @@ import static edu.wpi.first.units.Units.*;
 public class BeelineSpeeds {
     private static final ChassisSpeeds STOP = new ChassisSpeeds(0, 0, 0);
 
-    public static Function<Pose2d, ChassisSpeeds> of(Translation2d destination, LinearVelocity maxSpeed, Time stopTime, Distance threshold) {
+    public static Function<Pose2d, ChassisSpeeds> of(Translation2d destination, LinearVelocity maxSpeed, LinearVelocity minSpeed, Time stopTime, Time latency) {
         final double maxSpeedMPS = maxSpeed.in(MetersPerSecond);
-        final double thresholdM = threshold.in(Meters);
+        final double minSpeedMPS = minSpeed.in(MetersPerSecond);
+        final double thresholdM = minSpeed.times(latency).in(Meters);
         final double stopTimeS = stopTime.in(Seconds);
 
         return pose -> {
             Translation2d delta = destination.minus(pose.getTranslation());
             double distanceM = delta.getNorm();
             double stopSpeedMPS = distanceM / stopTimeS;
-            double speedMPS = Math.min(maxSpeedMPS, stopSpeedMPS);
+            double speedMPS = Math.max(Math.min(maxSpeedMPS, stopSpeedMPS), minSpeedMPS);
 
             if (distanceM > thresholdM) {
                 double vx = delta.getX() / distanceM * speedMPS;

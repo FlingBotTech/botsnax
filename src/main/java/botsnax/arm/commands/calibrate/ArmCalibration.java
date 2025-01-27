@@ -1,6 +1,7 @@
 package botsnax.arm.commands.calibrate;
 
 import botsnax.arm.commands.ArmKinematics;
+import botsnax.commands.calibrate.DirectionalVelocityCalibration;
 import botsnax.commands.calibrate.VelocityCalibration;
 import botsnax.control.MotorController;
 import botsnax.control.ReactionTimeVelocityController;
@@ -24,8 +25,7 @@ import static java.lang.Math.signum;
 public record ArmCalibration(
         ArmGravityController gravityController,
         double gearRatio,
-        VelocityCalibration positiveVelocityCalibration,
-        VelocityCalibration negativeVelocityCalibration) implements ArmKinematics {
+        DirectionalVelocityCalibration velocityCalibration) implements ArmKinematics {
 
     private static final Angle DEADBAND = Degrees.of(0.01);
 
@@ -45,15 +45,7 @@ public record ArmCalibration(
     }
 
     public Voltage getVoltage(AngularVelocity velocity, MotorState state) {
-        double signOfVelocity = signum(velocity.baseUnitMagnitude());
-
-        if (signOfVelocity > 0) {
-            return positiveVelocityCalibration.getVoltageForVelocity(velocity, state);
-        } else if (signOfVelocity < 0) {
-            return negativeVelocityCalibration.getVoltageForVelocity(velocity, state);
-        } else {
-            return Volts.of(0);
-        }
+        return velocityCalibration.getVoltage(velocity, state);
     }
 
     public MotorController createController(Function<MotorState, Angle> profile, Time reactionTime, AngularVelocity maxVelocity) {
@@ -64,22 +56,21 @@ public record ArmCalibration(
     }
 
     public ArmCalibration withGravity(ArmGravityController gravityCalibration) {
-        return new ArmCalibration(gravityCalibration, gearRatio, positiveVelocityCalibration, negativeVelocityCalibration);
+        return new ArmCalibration(gravityCalibration, gearRatio, velocityCalibration);
     }
 
     public ArmCalibration withGearRatio(double gearRatio) {
-        return new ArmCalibration(gravityController, gearRatio, positiveVelocityCalibration, negativeVelocityCalibration);
+        return new ArmCalibration(gravityController, gearRatio, velocityCalibration);
     }
 
     public ArmCalibration withVelocity(VelocityCalibration positiveVelocityCalibration, VelocityCalibration negativeVelocityCalibration) {
-        return new ArmCalibration(gravityController, gearRatio, positiveVelocityCalibration, negativeVelocityCalibration);
+        return new ArmCalibration(gravityController, gearRatio, new DirectionalVelocityCalibration(positiveVelocityCalibration, negativeVelocityCalibration));
     }
 
     public void save(String baseName) {
         gravityController.save(baseName);
         Preferences.setDouble(baseName + ".gearRatio", gearRatio);
-        positiveVelocityCalibration.save(baseName + ".positive");
-        negativeVelocityCalibration.save(baseName + ".negative");
+        velocityCalibration.save(baseName);
     }
 
     public static Optional<ArmCalibration> load(String baseName) {
@@ -87,9 +78,8 @@ public record ArmCalibration(
 
         if (!Double.isNaN(gearRatio)) {
             return ArmGravityController.load(baseName).flatMap(gravityCalibration ->
-                    VelocityCalibration.load(baseName + ".positive").flatMap(positiveVelocityCalibration ->
-                            VelocityCalibration.load(baseName + ".negative").map(negativeVelocityCalibration ->
-                                    new ArmCalibration(gravityCalibration, gearRatio, positiveVelocityCalibration, negativeVelocityCalibration))));
+                            DirectionalVelocityCalibration.load(baseName).map(velocityCalibration ->
+                                    new ArmCalibration(gravityCalibration, gearRatio, velocityCalibration)));
         } else {
             return Optional.empty();
         }

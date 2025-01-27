@@ -29,12 +29,16 @@ public class CompoundMotor<T extends MotorSystem> implements MotorSystem {
 
         @Override
         public void setRawPosition(Angle angle) {
-            getPrimary().getSim().setRawPosition(angle);
+            for(T motor : motors) {
+                motor.getSim().setRawPosition(angle);
+            }
         }
 
         @Override
         public void setVelocity(AngularVelocity velocity) {
-            getPrimary().getSim().setVelocity(velocity);
+            for (T motor : motors) {
+                motor.getSim().setVelocity(velocity);
+            }
         }
     }
 

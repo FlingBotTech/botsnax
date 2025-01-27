@@ -33,9 +33,7 @@ public class CircleAndEndpoint {
 
         boolean endpointOutside = center.getDistance(endpoint) > radius.in(Meters);
 
-        this.endpointToTangentDistanceM = endpointOutside ?
-                Math.hypot(radius.in(Meters), endpoint.getDistance(center)) :
-                0;
+        this.endpointToTangentDistanceM = endpointOutside ? distanceToTangent(endpoint) : 0;
     }
 
     public CircleAndEndpoint(Translation2d center, Distance radius, Translation2d endpoint) {
@@ -75,7 +73,7 @@ public class CircleAndEndpoint {
             if (hereToEndpointM < endpointToTangentDistanceM) {
                 return Optional.empty();
             } else if (hereToCenterM > radius.in(Meters)) {
-                Rotation2d rotation = new Rotation2d(hereToCenterM, radius.in(Meters));
+                Rotation2d rotation = new Rotation2d(distanceToTangent(here), radius.in(Meters));
                 Translation2d hereToTangent1 = hereToCenter.rotateBy(rotation);
                 double distance1 = hereToTangent1.plus(here).getDistance(endpoint);
                 Translation2d hereToTangent2 = hereToCenter.rotateBy(rotation.unaryMinus());
@@ -99,12 +97,16 @@ public class CircleAndEndpoint {
         });
     }
 
+    private double distanceToTangent(Translation2d point) {
+        return Math.sqrt(squareNorm(center.minus(point)) - Math.pow(radius.in(Meters), 2));
+    }
+
     private static double dotProduct(Translation2d t1, Translation2d t2) {
         return t1.getX() * t2.getX() + t1.getY() * t2.getY();
     }
 
     private static double squareNorm(Translation2d point) {
-        return Math.pow(point.getX(), 2) + Math.pow(point.getY(), 2);
+        return dotProduct(point, point);
     }
 
     public static Function<Pose2d, ChassisSpeeds> avoid(List<CircleAndEndpoint> circles, Function<Pose2d, ChassisSpeeds> speeds) {

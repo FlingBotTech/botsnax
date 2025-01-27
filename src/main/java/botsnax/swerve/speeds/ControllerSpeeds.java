@@ -44,7 +44,7 @@ public class ControllerSpeeds {
             LinearVelocity maxSpeed,
             AngularVelocity maxAngularSpeed) {
 
-        final boolean isRedAlliance = getAlliance().map(a -> a == Alliance.Red).orElse(true);
+        final boolean isRedAlliance = getAlliance().map(a -> a == Alliance.Red).orElse(false);
         final double multiplier = isRedAlliance ? 1 : -1;
 
         return ControllerSpeeds.of(

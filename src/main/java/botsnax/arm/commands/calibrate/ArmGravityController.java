@@ -1,5 +1,6 @@
 package botsnax.arm.commands.calibrate;
 
+import botsnax.control.GravityController;
 import botsnax.control.MotorController;
 import botsnax.system.motor.MotorState;
 import edu.wpi.first.units.BaseUnits;
@@ -13,16 +14,16 @@ import static edu.wpi.first.units.Units.*;
 import static java.lang.Double.NaN;
 import static java.lang.Math.cos;
 
-public record ArmGravityController(Voltage gain, Angle offset) implements MotorController {
-    public ArmGravityController(Voltage gain, Angle offset) {
-        this.gain = gain;
-        this.offset = offset;
-    }
-
+public record ArmGravityController(Voltage gain, Angle offset) implements GravityController{
     @Override
     public Voltage calculate(MotorState state) {
         Angle relativeAngle = state.getAngle().minus(offset);
         return gain.times(cos(relativeAngle.in(Radians)));
+    }
+
+    @Override
+    public Voltage getMaxFeedForward() {
+        return gain;
     }
 
     public void save(String baseName) {

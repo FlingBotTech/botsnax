@@ -15,13 +15,22 @@ import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.*;
 
 public class FacingSpeeds {
-    public static Function<Pose2d, ChassisSpeeds> of(Rotation2d angle, AngularVelocity maxVelocity, Time stopTime) {
+    private static final ChassisSpeeds STOP = new ChassisSpeeds(0, 0, 0);
+
+    public static Function<Pose2d, ChassisSpeeds> of(Rotation2d angle, AngularVelocity maxVelocity, AngularVelocity minVelocity, Time stopTime, Time latency) {
+        double thresholdRad = minVelocity.times(latency).in(Radians);
+
         return pose -> {
             double delta = angleModulus(angle.getRadians() - pose.getRotation().getRadians());
-            double reachVelocity = delta / stopTime.in(Seconds);
-            double velocity = min(maxVelocity.in(RadiansPerSecond), abs(reachVelocity)) * signum(reachVelocity);
 
-            return new ChassisSpeeds(0, 0, velocity);
+            if (abs(delta) > thresholdRad) {
+                double reachVelocity = delta / stopTime.in(Seconds);
+                double velocity = max(min(maxVelocity.in(RadiansPerSecond), abs(reachVelocity)), minVelocity.in(RadiansPerSecond)) * signum(reachVelocity);
+
+                return new ChassisSpeeds(0, 0, velocity);
+            } else {
+                return STOP;
+            }
         };
-    };
+    }
 }

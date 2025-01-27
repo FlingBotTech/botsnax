@@ -15,6 +15,10 @@ public class LinearAngularConversion {
         this.angleToDistance = angleToDistance;
     }
 
+    public Angle getAngle(Distance distance) {
+        return Radians.of(distance.baseUnitMagnitude() / angleToDistance);
+    }
+
     public Distance getDistance(Angle angle) {
         return BaseUnits.DistanceUnit.of(angle.in(Radians) * angleToDistance);
     }

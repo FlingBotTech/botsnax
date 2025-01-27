@@ -1,27 +1,27 @@
 package botsnax.arm.commands.calibrate;
 
 import botsnax.arm.commands.AwaitStabilityCommand;
+import botsnax.commands.calibrate.DirectionalVelocityCalibration;
+import botsnax.commands.calibrate.VelocityCalibration;
+import botsnax.control.MotorController;
+import botsnax.control.MotorControllerFactory;
+import botsnax.control.ProportionalSetpointController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import botsnax.control.MotorController;
-import botsnax.control.MotorControllerFactory;
-import botsnax.control.ProportionalSetpointController;
-import botsnax.commands.calibrate.VelocityCalibration;
 
 import java.util.function.Consumer;
 
-import static edu.wpi.first.units.ImmutableMeasure.ofRelativeUnits;
 import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.pow;
 
 public class CalibrateGearRatioCommand extends SequentialCommandGroup {
     private static final Angle ERROR_TO_APPLY_MAXIMUM_VOLTAGE = Degrees.of(10);
 
-    public CalibrateGearRatioCommand(ArmCalibrationParams arm, Voltage maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
+public CalibrateGearRatioCommand(ArmCalibrationParams arm, Voltage maxVoltage, Consumer<ArmCalibration> calibrationConsumer) {
         addCommands(
                 new InstantCommand(arm::zeroPositions, arm.requirements()),
                 goToAngle(arm, ERROR_TO_APPLY_MAXIMUM_VOLTAGE, maxVoltage, calibrationConsumer)
@@ -43,8 +43,10 @@ public class CalibrateGearRatioCommand extends SequentialCommandGroup {
         return new ArmCalibration(
                 new ArmGravityController(result.voltage(), result.angle()),
                 gearRatio,
-                new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0)),
-                new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0))
+                new DirectionalVelocityCalibration(
+                    new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0)),
+                    new VelocityCalibration(estimatedVelocityToVoltageSlope, Volts.of(0))
+                )
         );
     }
 
