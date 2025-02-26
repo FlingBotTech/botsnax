@@ -1,5 +1,6 @@
 package botsnax.swerve;
 
+import botsnax.swerve.listener.ModuleRequestListener;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import botsnax.flywheel.Flywheel;
 import botsnax.system.Gearbox;
@@ -24,11 +25,13 @@ public class SwerveModule {
     private final Gearbox steering;
     private final Flywheel drive;
     private final LinearAngularConversion conversion;
+    private final ModuleRequestListener moduleRequestListener;
 
-    public SwerveModule(Gearbox steering, Flywheel drive, LinearAngularConversion conversion) {
+    public SwerveModule(Gearbox steering, Flywheel drive, LinearAngularConversion conversion, ModuleRequestListener moduleRequestListener) {
         this.steering = steering;
         this.drive = drive;
         this.conversion = conversion;
+        this.moduleRequestListener = moduleRequestListener;
 
         drive.setBrakeOnIdle();
     }
@@ -55,6 +58,7 @@ public class SwerveModule {
     public void apply(SwerveModuleState state, ApplyMode mode) {
         SwerveModuleState currentState = mode.stateGetter.apply(this);
         SwerveModuleState optimized = mode.optimizer().apply(state, currentState.angle);
+        moduleRequestListener.onModuleRequest(optimized, currentState);
         mode.linearVelocitySetter().setVelocity(MetersPerSecond.of(optimized.speedMetersPerSecond), drive);
         mode.angleSetter().apply(optimized.angle, steering.getMotor());
     }

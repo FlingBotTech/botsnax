@@ -16,7 +16,37 @@ import static java.lang.Double.NaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
-public record VelocityCalibration (double velocityToVoltageSlope, Voltage minimumVoltage) implements MotorKinematics {
+public class VelocityCalibration implements MotorKinematics {
+    private final double velocityToVoltageSlope;
+    private final Voltage minimumVoltage;
+
+    public double getVelocityToVoltageSlope() {
+        return velocityToVoltageSlope;
+    }
+
+    public VelocityCalibration(double velocityToVoltageSlope, Voltage minimumVoltage) {
+        double minimumVoltageV = minimumVoltage.in(Volts);
+
+        if (minimumVoltageV < 0) {
+            if (minimumVoltageV > -0.1) {
+                new RuntimeException("Warning: minimum voltage is negative, clamping to zero: " + minimumVoltageV)
+                    .printStackTrace(System.err);
+                this.minimumVoltage = Volts.zero();
+            }
+            else {
+                throw new RuntimeException("Minimum voltage is negative: " + minimumVoltageV);
+            }
+        } else {
+            this.minimumVoltage = minimumVoltage;
+        }
+
+        if (velocityToVoltageSlope < 0) {
+            throw new RuntimeException("velocityToVoltageSlope is negative: " + velocityToVoltageSlope);
+        } else {
+            this.velocityToVoltageSlope = velocityToVoltageSlope;
+        }
+    }
+
     @Override
     public Voltage getVoltageForVelocity(AngularVelocity velocity, MotorState state) {
         double velocityMagnitude = velocity.baseUnitMagnitude();
@@ -34,7 +64,7 @@ public record VelocityCalibration (double velocityToVoltageSlope, Voltage minimu
         Preferences.setDouble(baseName + ".FF.ks", minimumVoltage.baseUnitMagnitude());
     }
 
-    public Slot0Configs asTalonConfig() {
+    public Slot0Configs getTalonFXSlot0Configs() {
         return new Slot0Configs()
                 .withKS(minimumVoltage.baseUnitMagnitude())
                 .withKV(1.0 / (BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(1.0 / velocityToVoltageSlope).in(RotationsPerSecond)));

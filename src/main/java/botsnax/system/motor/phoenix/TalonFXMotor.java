@@ -128,7 +128,7 @@ public class TalonFXMotor implements MotorSystem {
 
     @Override
     public Angle getAngle() {
-        return motor.getRotorPosition().getValue().times(invert);
+        return motor.getPosition().getValue().times(invert);
     }
 
     @Override

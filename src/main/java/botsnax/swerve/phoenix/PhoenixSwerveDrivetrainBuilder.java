@@ -4,9 +4,6 @@ import botsnax.commands.calibrate.VelocityCalibration;
 import botsnax.swerve.sim.SwerveSim;
 import botsnax.util.phoenix.CANcoderUtil;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -110,7 +107,7 @@ public class PhoenixSwerveDrivetrainBuilder {
     private SwerveModuleConstants<?, ?, ?> loadVelocityCalibration(SwerveModuleConstants<?, ?, ?> module) {
         return VelocityCalibration
                 .load(getVelocityCalibrationPreferenceName(module.DriveMotorId))
-                .<SwerveModuleConstants<?, ?, ?>>map(calibration -> module.withDriveMotorGains(calibration.asTalonConfig().withKP(DRIVE_KP)))
+                .<SwerveModuleConstants<?, ?, ?>>map(calibration -> module.withDriveMotorGains(calibration.getTalonFXSlot0Configs().withKP(DRIVE_KP)))
                 .orElse(module);
     }
 }

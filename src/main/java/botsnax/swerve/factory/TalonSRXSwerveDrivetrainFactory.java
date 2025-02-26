@@ -3,6 +3,7 @@ package botsnax.swerve.factory;
 import botsnax.swerve.SwerveModule;
 import botsnax.swerve.SwerveModuleStateOptimizer;
 import botsnax.swerve.SwerveOdometryUpdater;
+import botsnax.swerve.listener.SteeringErrorRequestListener;
 import botsnax.swerve.phoenix.TalonFXDrive;
 import botsnax.swerve.phoenix.TalonSRXSteering;
 import botsnax.swerve.sim.PerfectSteering;
@@ -76,7 +77,7 @@ public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFact
     }
 
     @Override
-    protected SwerveModule createModule(SwerveModuleConstants<?, ?, ?> constants) {
+    protected SwerveModule createModule(int moduleId, SwerveModuleConstants<?, ?, ?> constants) {
         return new SwerveModule(
                 isSimulation() ?
                         PerfectSteering.createGearbox() :
@@ -84,7 +85,8 @@ public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFact
                 TalonFXDrive.create(constants, ""),
                 LinearAngularConversion.ofWheelRadiusGearRatio(
                         Inches.of(constants.WheelRadius),
-                        constants.DriveMotorGearRatio)
+                        constants.DriveMotorGearRatio),
+                SteeringErrorRequestListener.of(moduleId)
         );
     }
 

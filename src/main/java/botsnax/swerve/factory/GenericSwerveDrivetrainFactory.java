@@ -21,6 +21,8 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Mass;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import static edu.wpi.first.units.Units.*;
@@ -44,9 +46,11 @@ public abstract class GenericSwerveDrivetrainFactory {
 
         Gyro gyro = createGyro();
 
-        SwerveModule[] modules = stream(moduleConstants)
-                .map(this::createModule)
-                .toArray(SwerveModule[]::new);
+        List<SwerveModule> moduleList = new ArrayList<>(moduleConstants.length);
+        for (int moduleId = 0; moduleId < moduleConstants.length; moduleId++) {
+            moduleList.add(createModule(moduleId, moduleConstants[moduleId]));
+        }
+        SwerveModule[] modules = moduleList.toArray(new SwerveModule[0]);
 
         Translation2d[] locations = stream(moduleConstants)
                 .map(c -> new Translation2d(c.LocationX, c.LocationY))
@@ -173,6 +177,6 @@ public abstract class GenericSwerveDrivetrainFactory {
     protected abstract SwerveModule.ApplyMode getDefaultApplyode();
     protected abstract SwerveModulePosition getPosition(SwerveModule module);
     protected abstract Gyro createGyro();
-    protected abstract SwerveModule createModule(SwerveModuleConstants<?, ?, ?> moduleConstants);
+    protected abstract SwerveModule createModule(int moduleId, SwerveModuleConstants<?, ?, ?> moduleConstants);
     protected abstract PeriodicUpdater<SwerveOdometryUpdater> createPeriodicUpdater(SwerveOdometryUpdater odometryUpdater, Gyro gyro, SwerveModule[] modules);
 }

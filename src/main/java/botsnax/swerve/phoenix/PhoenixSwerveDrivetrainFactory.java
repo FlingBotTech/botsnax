@@ -4,6 +4,7 @@ import botsnax.swerve.GenericSwerveDrivetrain;
 import botsnax.swerve.SwerveCalibration;
 import botsnax.swerve.SwerveController;
 import botsnax.swerve.SwerveModule;
+import botsnax.swerve.listener.PoseLogger;
 import botsnax.swerve.sim.GenericSwerveSim;
 import botsnax.swerve.sim.IdealizedSwerveDrivetrain;
 import botsnax.swerve.sim.IdealizedSwerveSim;
@@ -14,22 +15,17 @@ import botsnax.system.motor.phoenix.PigeonGyro;
 import botsnax.system.motor.phoenix.TalonFXMotor;
 import botsnax.util.LinearAngularConversion;
 import botsnax.util.SimRunner;
-import botsnax.vision.PoseEstimate;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Mass;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
@@ -40,7 +36,7 @@ public class PhoenixSwerveDrivetrainFactory {
     protected final SwerveDrivetrainConstants drivetrainConstants;
     protected final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
 
-    protected PhoenixSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+    public PhoenixSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
         this.mass = mass;
         this.drivetrainConstants = drivetrainConstants;
         this.moduleConstants = moduleConstants;
@@ -69,24 +65,25 @@ public class PhoenixSwerveDrivetrainFactory {
 
         List<SwerveModule> genericModules = new ArrayList<>(moduleConstants.length);
         for (int i = 0; i < moduleConstants.length; i++) {
+            SwerveModuleConstants<?, ?, ?> constants = moduleConstants[i];
+
             SwerveModule genericModule = new SwerveModule(
                     new Gearbox(
                             new TalonFXMotor(
-                                    drivetrain.getModule(i).getDriveMotor(),
-                                    moduleConstants[i].DriveMotorInverted,
-                                    dcMotor)
-                                    .withGearRatio(moduleConstants[i].SteerMotorGearRatio),
+                                    drivetrain.getModule(i).getSteerMotor(),
+                                    constants.SteerMotorInverted,
+                                    dcMotor),
                             new CANcoderEncoder(drivetrain.getModule(i).getEncoder())
                     ),
                     new TalonFXMotor(
                             drivetrain.getModule(i).getDriveMotor(),
-                            moduleConstants[i].DriveMotorInverted,
-                            dcMotor)
-                            .withGearRatio(moduleConstants[i].DriveMotorGearRatio),
+                            constants.DriveMotorInverted,
+                            dcMotor),
                     LinearAngularConversion.ofWheelRadiusGearRatio(
                             Meters.of(moduleConstants[i].WheelRadius),
-                            moduleConstants[i].DriveMotorGearRatio
-                    ));
+                            constants.DriveMotorGearRatio
+                    ),
+                    (requested, current) -> {});
 
             genericModules.add(genericModule);
         }
@@ -105,53 +102,21 @@ public class PhoenixSwerveDrivetrainFactory {
                 moduleConstants
         );
 
+        PoseLogger poseLogger = new PoseLogger();
+
         if (isSimulation()) {
+            drivetrain.registerTelemetry(state -> poseLogger.onPoseUpdate(idealizedSwerveSim.getPose()));
             new SimRunner().start(
                     dt -> genericSwerveSim.update(dt, Volts.of(getBatteryVoltage()), genericModules.toArray(new SwerveModule[0])),
                     Milliseconds.of(5));
+        } else {
+            drivetrain.registerTelemetry(state -> poseLogger.onPoseUpdate(state.Pose));
         }
 
-        return new SwerveController() {
-            @Override
-            public GenericSwerveDrivetrain getDrivetrain() {
-                return genericDrivetrain;
-            }
-
-            @Override
-            public Pose2d getPose() {
-                return drivetrain.getState().Pose;
-            }
-
-            @Override
-            public Pose2d getSimPose() {
-                return idealizedSwerveSim.getPose();
-            }
-
-            @Override
-            public void setPose(Pose2d pose) {
-                drivetrain.resetPose(pose);
-            }
-
-            @Override
-            public void setSimPose(Pose2d pose) {
-                idealizedSwerveSim.setPose(pose);
-            }
-
-            @Override
-            public void setFieldSpeeds(final Function<Pose2d, ChassisSpeeds> speeds) {
-                drivetrain.setControl(new SwerveRequest.ApplyFieldSpeeds() {
-                    @Override
-                    public StatusCode apply(SwerveDrivetrain.SwerveControlParameters parameters, com.ctre.phoenix6.swerve.SwerveModule<?, ?, ?>... modulesToApply) {
-                        this.withSpeeds(speeds.apply(parameters.currentPose));
-                        return super.apply(parameters, modulesToApply);
-                    }
-                });
-            }
-
-            @Override
-            public void addVisionMeasurement(PoseEstimate estimate) {
-                drivetrain.addVisionMeasurement(estimate.pose(), estimate.timestamp().in(Seconds), estimate.stdDevs());
-            }
-        };
+        return new PhoenixSwerveController(
+                drivetrain,
+                genericDrivetrain,
+                idealizedSwerveSim
+        );
     }
 }

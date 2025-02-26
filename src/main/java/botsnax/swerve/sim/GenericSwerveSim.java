@@ -132,6 +132,7 @@ public class GenericSwerveSim {
         ChassisSpeeds chassisSpeeds = kinematics.toChassisSpeeds(states);
         swerveSim.update(chassisSpeeds, dt);
         gyroSim.setRawYaw(Radians.of(swerveSim.getPose().getRotation().getRadians()));
+        gyroSim.setAngularVelocityZ(RadiansPerSecond.of(swerveSim.getVelocity().omegaRadiansPerSecond));
     }
 
     /**
