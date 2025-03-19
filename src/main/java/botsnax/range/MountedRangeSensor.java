@@ -20,6 +20,10 @@ public class MountedRangeSensor {
         return rangeSensor;
     }
 
+    public Transform2d getRobotToSensor() {
+        return robotToSensor;
+    }
+
     public Optional<PositionEstimate> getFieldRelativeMeasurementIfAny() {
         return rangeSensor.getDistance().map(measurement -> {
             Translation2d fieldPoint = new Translation2d(measurement.distance().in(Meters), 0)

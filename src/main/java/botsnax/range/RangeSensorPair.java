@@ -90,10 +90,13 @@ public class RangeSensorPair {
 
     private Optional<RangeAngleMeasurement> getDistanceAngleFromPlaneIfAny() {
         return getMeasurementPairIfAny().map(pair -> {
-            Translation2d delta = pair.right().position().minus(pair.left().position());
-            Rotation2d rotation = new Rotation2d(delta.getX(), delta.getY()).rotateBy(Rotation2d.kCCW_90deg).unaryMinus();
+                    Translation2d delta = pair.right().position().minus(pair.left().position());
+                    Rotation2d rotation = new Rotation2d(delta.getX(), delta.getY())
+                            .rotateBy(Rotation2d.kCCW_90deg)
+                            .rotateBy(leftRangeSensor.getRobotToSensor().getRotation())
+                            .unaryMinus();
 
-            anglePublisher.set(rotation.getDegrees());
+                    anglePublisher.set(rotation.getDegrees());
 
                     return new RangeAngleMeasurement(
                             getMinDistanceToOrigin(pair.left().position(), pair.right().position()),

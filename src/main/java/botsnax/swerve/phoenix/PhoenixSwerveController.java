@@ -9,9 +9,11 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
@@ -58,21 +60,18 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
 
     @Override
     public void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
-        if (isSimulation()) {
-            setDefaultCommand(run(() -> {
-                phoenixDrivetrain.setControl(
-                        applyFieldSpeeds
-                                .withSpeeds(speeds.apply(getSimPose()))
-                );
-            }));
-        } else {
-            setDefaultCommand(run(() -> {
-                phoenixDrivetrain.setControl(
-                        applyFieldSpeeds
-                                .withSpeeds(speeds.apply(getPose()))
-                );
-            }));
+        Command defaultCommand = getDefaultCommand();
+        if (defaultCommand != null) {
+            defaultCommand.cancel();
         }
+
+        Supplier<Pose2d> getPose = isSimulation() ? this::getSimPose : this::getPose;
+
+        setDefaultCommand(run(() -> {
+            phoenixDrivetrain.setControl(
+                    applyFieldSpeeds.withSpeeds(speeds.apply(getPose.get()))
+            );
+        }));
     }
 
     @Override

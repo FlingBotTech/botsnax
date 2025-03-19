@@ -26,6 +26,7 @@ import edu.wpi.first.units.measure.Mass;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
@@ -35,11 +36,22 @@ public class PhoenixSwerveDrivetrainFactory {
     protected final Mass mass;
     protected final SwerveDrivetrainConstants drivetrainConstants;
     protected final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
+    protected final Consumer<SwerveDrivetrain.SwerveDriveState> logger;
 
     public PhoenixSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+        this (mass, getDefaultLogger(), drivetrainConstants, moduleConstants);
+    }
+
+    public PhoenixSwerveDrivetrainFactory(Mass mass, Consumer<SwerveDrivetrain.SwerveDriveState> logger, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
         this.mass = mass;
+        this.logger = logger;
         this.drivetrainConstants = drivetrainConstants;
         this.moduleConstants = moduleConstants;
+    }
+
+    private static Consumer<SwerveDrivetrain.SwerveDriveState> getDefaultLogger() {
+        PoseLogger poseLogger = new PoseLogger();
+        return state -> poseLogger.onPoseUpdate(state.Pose);
     }
 
     public SwerveController create() {
@@ -102,15 +114,12 @@ public class PhoenixSwerveDrivetrainFactory {
                 moduleConstants
         );
 
-        PoseLogger poseLogger = new PoseLogger();
+        drivetrain.registerTelemetry(logger);
 
         if (isSimulation()) {
-            drivetrain.registerTelemetry(state -> poseLogger.onPoseUpdate(idealizedSwerveSim.getPose()));
             new SimRunner().start(
                     dt -> genericSwerveSim.update(dt, Volts.of(getBatteryVoltage()), genericModules.toArray(new SwerveModule[0])),
                     Milliseconds.of(5));
-        } else {
-            drivetrain.registerTelemetry(state -> poseLogger.onPoseUpdate(state.Pose));
         }
 
         return new PhoenixSwerveController(
