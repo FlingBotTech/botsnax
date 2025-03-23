@@ -39,7 +39,7 @@ publishing {
         robotCommon(MavenPublication) {
             groupId = 'flingBotTech'
             artifactId = 'botsnax'
-            version = '2025.0.8'
+            version = '2025.0.9'
 
             pom {
                 name = 'Botsnax'
