@@ -154,17 +154,24 @@ public abstract class GenericSwerveDrivetrainFactory {
             }
 
             @Override
-            public void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
+            public void setRobotSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
                 periodicUpdater.apply(
                         odometryUpdater -> odometryUpdater.setModuleUpdater(
                                 new SwerveOdometryUpdater.ChassisSpeedsUpdater(
-                                        new SwerveOdometryUpdater.FieldOrienter(
-                                                speeds,
-                                                1.0 / periodicUpdater.getUpdateFrequency()
-                                        )::apply,
+                                        speeds,
                                         drivetrain,
                                         defaultApplyMode
                                 )));
+            }
+
+            @Override
+            public void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
+                setRobotSpeeds(
+                        new SwerveOdometryUpdater.FieldOrienter(
+                                speeds,
+                                1.0 / periodicUpdater.getUpdateFrequency()
+                        )::apply
+                );
             }
 
             @Override

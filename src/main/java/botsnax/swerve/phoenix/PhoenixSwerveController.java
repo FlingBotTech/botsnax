@@ -23,6 +23,7 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
     private final GenericSwerveDrivetrain genericDrivetrain;
     private final IdealizedSwerveSim sim;
     private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds;
+    private final SwerveRequest.ApplyRobotSpeeds applyRobotSpeeds;
 
     public PhoenixSwerveController(SwerveDrivetrain<?, ?, ?> phoenixDrivetrain, GenericSwerveDrivetrain genericDrivetrain, IdealizedSwerveSim sim) {
         this.phoenixDrivetrain = phoenixDrivetrain;
@@ -30,6 +31,8 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
         this.sim = sim;
 
         this.applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds()
+                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+        this.applyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
     }
 
@@ -58,20 +61,31 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
         sim.setPose(pose);
     }
 
-    @Override
-    public void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
+    private Supplier<Pose2d> getPoseSupplier() {
+        return isSimulation() ? this::getSimPose : this::getPose;
+    }
+
+    private void setSwerveRequestFunction(Function<Pose2d, SwerveRequest> requestFunction) {
         Command defaultCommand = getDefaultCommand();
         if (defaultCommand != null) {
             defaultCommand.cancel();
         }
 
-        Supplier<Pose2d> getPose = isSimulation() ? this::getSimPose : this::getPose;
+        Supplier<Pose2d> poseSupplier = getPoseSupplier();
 
         setDefaultCommand(run(() -> {
-            phoenixDrivetrain.setControl(
-                    applyFieldSpeeds.withSpeeds(speeds.apply(getPose.get()))
-            );
+            phoenixDrivetrain.setControl(requestFunction.apply(poseSupplier.get()));
         }));
+    }
+
+    @Override
+    public void setRobotSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
+        setSwerveRequestFunction(pose -> applyRobotSpeeds.withSpeeds(speeds.apply(pose)));
+    }
+
+    @Override
+    public void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds) {
+        setSwerveRequestFunction(pose -> applyFieldSpeeds.withSpeeds(speeds.apply(pose)));
     }
 
     @Override

@@ -12,6 +12,7 @@ public interface SwerveController {
     Pose2d getSimPose();
     void setPose(Pose2d pose);
     void setSimPose(Pose2d pose);
+    void setRobotSpeeds(Function<Pose2d, ChassisSpeeds> speeds);
     void setFieldSpeeds(Function<Pose2d, ChassisSpeeds> speeds);
     void addVisionMeasurement(PoseEstimate estimate);
 }
