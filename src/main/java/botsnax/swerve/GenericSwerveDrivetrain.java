@@ -29,6 +29,10 @@ public class GenericSwerveDrivetrain {
         }
     }
 
+    public SwerveModule[] getModules() {
+        return modules;
+    }
+
     public Command calibrateDriveMotors(AngleSetter angleSetter, Subsystem... requirements) {
         return new CalibrateDriveMotorsCommand(kinematics, modules, angleSetter, requirements);
     }

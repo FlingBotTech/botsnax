@@ -65,6 +65,8 @@ public class RangeSensorPair {
             Distance stdDev = normDistance.stdDev().plus(lateralDistance.stdDev());
             Angle angularStdDev = Radians.of(1e5);
 
+            distancePublisher.set(normDistance.distance().in(Meters));
+
             return new PoseEstimate(
                     fieldPose,
                     new Matrix<>(N3.instance, N1.instance, new double[]{

@@ -41,6 +41,10 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
         return genericDrivetrain;
     }
 
+    public SwerveDrivetrain<?, ?, ?> getPhoenixDrivetrain() {
+        return phoenixDrivetrain;
+    }
+
     @Override
     public Pose2d getPose() {
         return phoenixDrivetrain.getState().Pose;
