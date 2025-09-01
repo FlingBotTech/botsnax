@@ -8,7 +8,7 @@ import botsnax.swerve.phoenix.TalonFXDrive;
 import botsnax.swerve.phoenix.TalonSRXSteering;
 import botsnax.swerve.sim.PerfectSteering;
 import botsnax.system.Gyro;
-import botsnax.system.motor.LinearVelocitySetter;
+import botsnax.system.motor.VelocitySetter;
 import botsnax.system.motor.phoenix.PigeonGyro;
 import botsnax.system.motor.phoenix.TalonFXMotor;
 import botsnax.system.motor.phoenix.TalonSRXMotor;
@@ -27,7 +27,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -43,18 +42,22 @@ public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFact
     protected static final int START_THREAD_PRIORITY = 1;
     private static final int DEFAULT_UPDATE_FREQUENCY = 100;
 
-    private final LinearVelocity maxSpeed;
+    private final VelocitySetter velocitySetter;
 
-    public TalonSRXSwerveDrivetrainFactory(Mass mass, LinearVelocity maxSpeed, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+    public TalonSRXSwerveDrivetrainFactory(Mass mass, VelocitySetter velocitySetter, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
         super(mass, drivetrainConstants, moduleConstants);
-        this.maxSpeed = maxSpeed;
+        this.velocitySetter = velocitySetter;
+    }
+
+    public TalonSRXSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+        this(mass, VelocitySetter.createOpenLoop(RadiansPerSecond.of(DCMotor.getKrakenX60(1).freeSpeedRadPerSec)), drivetrainConstants, moduleConstants);
     }
 
     @Override
-    protected SwerveModule.ApplyMode getDefaultApplyode() {
+    protected SwerveModule.ApplyMode getDefaultApplyMode() {
         return new SwerveModule.ApplyMode(
                 SwerveModule :: getState,
-                LinearVelocitySetter.createOpenLoop(maxSpeed),
+                this.velocitySetter,
                 PID_CONTROL,
                 new SwerveModuleStateOptimizer()
         );

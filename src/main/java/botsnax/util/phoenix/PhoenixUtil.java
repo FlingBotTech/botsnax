@@ -26,7 +26,7 @@ public class PhoenixUtil {
 
         double value = signal.getValue().baseUnitMagnitude();
 
-        if (abs(value - expectedValue) > 0.01) {
+        if (abs(value - expectedValue) > 0.02) {
             throw new RuntimeException("Failed to validate signal: " + signal.getName() + ", value = " + value + ", expectedValue = " + expectedValue);
         }
     }

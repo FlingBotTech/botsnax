@@ -1,11 +1,11 @@
 package botsnax.swerve;
 
 import botsnax.swerve.listener.ModuleRequestListener;
+import botsnax.system.motor.VelocitySetter;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import botsnax.flywheel.Flywheel;
 import botsnax.system.Gearbox;
 import botsnax.system.motor.AngleSetter;
-import botsnax.system.motor.LinearVelocitySetter;
 import botsnax.util.LinearAngularConversion;
 
 import java.util.function.Function;
@@ -17,7 +17,7 @@ import static edu.wpi.first.units.Units.Radians;
 public class SwerveModule {
     public record ApplyMode(
             Function<SwerveModule, SwerveModuleState> stateGetter,
-            LinearVelocitySetter linearVelocitySetter,
+            VelocitySetter velocitySetter,
             AngleSetter angleSetter,
             SwerveModuleStateOptimizer optimizer) {
     }
@@ -59,7 +59,7 @@ public class SwerveModule {
         SwerveModuleState currentState = mode.stateGetter.apply(this);
         SwerveModuleState optimized = mode.optimizer().apply(state, currentState.angle);
         moduleRequestListener.onModuleRequest(optimized, currentState);
-        mode.linearVelocitySetter().setVelocity(MetersPerSecond.of(optimized.speedMetersPerSecond), drive);
+        mode.velocitySetter().apply(conversion.getAngularVelocity(MetersPerSecond.of(optimized.speedMetersPerSecond)), drive);
         mode.angleSetter().apply(optimized.angle, steering.getMotor());
     }
 }

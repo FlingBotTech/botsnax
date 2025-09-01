@@ -1,14 +1,16 @@
 package botsnax.swerve;
 
 import botsnax.swerve.SwerveModule.ApplyMode;
-import botsnax.swerve.commands.calibrate.CalibrateDriveMotorsCommand;
-import botsnax.swerve.commands.calibrate.StoreEncoderOffsetsCommand;
+import botsnax.swerve.commands.calibrate.*;
 import botsnax.system.motor.AngleSetter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Volts;
 
 public class GenericSwerveDrivetrain {
     private final SwerveModule[] modules;
@@ -39,5 +41,17 @@ public class GenericSwerveDrivetrain {
 
     public Command storeEncoderOffsets(Subsystem ... requirements) {
         return new StoreEncoderOffsetsCommand(modules, requirements);
+    }
+
+    public Command startOdometryCalibration(Subsystem... requirements) {
+        return new StartOdometryCalibrationCommand(modules, requirements);
+    }
+
+    public Command endOdometryCalibration(Subsystem... requirements) {
+        return new EndOdometryCalibrationCommand(modules, requirements);
+    }
+
+    public Command calibrateCouplingRatio(Subsystem... requirements) {
+        return new CalibrateCouplingRatioCommand(modules, Rotations.of(2), Volts.of(0.25), requirements);
     }
 }

@@ -64,10 +64,15 @@ public class VelocityCalibration implements MotorKinematics {
         Preferences.setDouble(baseName + ".FF.ks", minimumVoltage.baseUnitMagnitude());
     }
 
-    public Slot0Configs getTalonFXSlot0Configs() {
-        return new Slot0Configs()
+    public Slot0Configs applyTalonFXSlot0Configs(Slot0Configs slot0Configs) {
+        return slot0Configs
                 .withKS(minimumVoltage.baseUnitMagnitude())
-                .withKV(1.0 / (BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(1.0 / velocityToVoltageSlope).in(RotationsPerSecond)));
+                .withKV(1.0 / (BaseUnits.AngleUnit.per(BaseUnits.TimeUnit).of(1.0 / velocityToVoltageSlope).in(RotationsPerSecond)))
+                .withKA(0);
+    }
+
+    public Slot0Configs getTalonFXSlot0Configs() {
+        return applyTalonFXSlot0Configs(new Slot0Configs());
     }
 
     public static Optional<VelocityCalibration> load(String baseName) {

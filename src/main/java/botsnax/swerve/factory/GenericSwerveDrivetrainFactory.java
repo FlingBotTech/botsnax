@@ -125,7 +125,7 @@ public abstract class GenericSwerveDrivetrainFactory {
         }
 
         GenericSwerveDrivetrain drivetrain = new GenericSwerveDrivetrain(kinematics, modules);
-        SwerveModule.ApplyMode defaultApplyMode = getDefaultApplyode();
+        SwerveModule.ApplyMode defaultApplyMode = getDefaultApplyMode();
 
         return new SwerveController() {
             @Override
@@ -181,7 +181,7 @@ public abstract class GenericSwerveDrivetrainFactory {
         };
     }
 
-    protected abstract SwerveModule.ApplyMode getDefaultApplyode();
+    protected abstract SwerveModule.ApplyMode getDefaultApplyMode();
     protected abstract SwerveModulePosition getPosition(SwerveModule module);
     protected abstract Gyro createGyro();
     protected abstract SwerveModule createModule(int moduleId, SwerveModuleConstants<?, ?, ?> moduleConstants);

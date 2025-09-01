@@ -2,9 +2,11 @@ package botsnax.system.motor.phoenix;
 
 import botsnax.system.motor.MotorSim;
 import botsnax.system.motor.MotorSystem;
+import botsnax.system.motor.VelocitySetter;
 import botsnax.util.phoenix.PhoenixUtil;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -154,5 +156,13 @@ public class TalonFXMotor implements MotorSystem {
     @Override
     public void setAngle(Angle angle) {
         PhoenixUtil.setAndValidatePosition(motor, angle.times(invert));
+    }
+
+    public static VelocitySetter getVelocityVoltageSetter() {
+        final VelocityVoltage velocityVoltage = new VelocityVoltage(0);
+
+        return (velocity, flywheel) -> {
+            ((TalonFXMotor) flywheel).get().setControl(velocityVoltage.withVelocity(velocity));
+        };
     }
 }

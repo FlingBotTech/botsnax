@@ -19,6 +19,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.*;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static edu.wpi.first.wpilibj.RobotController.getBatteryVoltage;
@@ -37,13 +39,15 @@ public class PhoenixSwerveDrivetrainFactory {
     protected final SwerveDrivetrainConstants drivetrainConstants;
     protected final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
     protected final Consumer<SwerveDrivetrain.SwerveDriveState> logger;
+    protected final DriveRequestType driveRequestType;
 
     public PhoenixSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
-        this (mass, getDefaultLogger(), drivetrainConstants, moduleConstants);
+        this (mass, OpenLoopVoltage, getDefaultLogger(), drivetrainConstants, moduleConstants);
     }
 
-    public PhoenixSwerveDrivetrainFactory(Mass mass, Consumer<SwerveDrivetrain.SwerveDriveState> logger, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+    public PhoenixSwerveDrivetrainFactory(Mass mass, DriveRequestType driveRequestType, Consumer<SwerveDrivetrain.SwerveDriveState> logger, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
         this.mass = mass;
+        this.driveRequestType = driveRequestType;
         this.logger = logger;
         this.drivetrainConstants = drivetrainConstants;
         this.moduleConstants = moduleConstants;
@@ -125,7 +129,8 @@ public class PhoenixSwerveDrivetrainFactory {
         return new PhoenixSwerveController(
                 drivetrain,
                 genericDrivetrain,
-                idealizedSwerveSim
+                idealizedSwerveSim,
+                driveRequestType
         );
     }
 }

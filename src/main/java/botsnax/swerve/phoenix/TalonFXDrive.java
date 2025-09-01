@@ -7,8 +7,16 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.signals.InvertedValue;
 import botsnax.flywheel.Flywheel;
 import botsnax.system.motor.phoenix.TalonFXMotor;
+import edu.wpi.first.math.system.plant.DCMotor;
 
-public class TalonFXDrive {
+public class TalonFXDrive extends TalonFXMotor {
+    private final SwerveModuleConstants<?, ?, ?> constants;
+
+    public TalonFXDrive(TalonFX motor, boolean inverted, SwerveModuleConstants<?, ?, ?> constants) {
+        super(motor, inverted, DCMotor.getKrakenX60(1));
+        this.constants = constants;
+    }
+
     public static Flywheel create(SwerveModuleConstants<?, ?, ?> constants, String bus) {
         TalonFX motor = new TalonFX(constants.DriveMotorId, bus);
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
@@ -27,6 +35,6 @@ public class TalonFXDrive {
                     "TalonFX ID " + motor.getDeviceID() + " failed config with error " + response.toString());
         }
 
-        return new TalonFXMotor(motor, constants.DriveMotorInverted);
+        return new TalonFXDrive(motor, constants.DriveMotorInverted, constants);
     }
 }

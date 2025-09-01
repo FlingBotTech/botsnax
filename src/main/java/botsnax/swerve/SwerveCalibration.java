@@ -9,6 +9,7 @@ public class SwerveCalibration {
     public static final String PREFERENCE_BASE_NAME = "SwerveModule";
     public static final String VELOCITY_BASE_NAME = "drive.velocity.";
     public static final String OFFSET_BASE_NAME = "encoder.offset";
+    public static final String COUPLING_RATIO_BASE_NAME = "coupling_ratio.";
 
     private static String getModuleBaseName(int i) {
         return PREFERENCE_BASE_NAME + "." + i + ".";
@@ -16,6 +17,10 @@ public class SwerveCalibration {
 
     public static String getOffsetName(int i) {
         return getModuleBaseName(i) + OFFSET_BASE_NAME;
+    }
+
+    public static String getCouplingRatioName(int i) {
+        return getModuleBaseName(i) + COUPLING_RATIO_BASE_NAME;
     }
 
     public static String getDriveVelocityBaseName(int i) {
@@ -33,6 +38,8 @@ public class SwerveCalibration {
     }
 
     public static void apply(SwerveModuleConstants<?, ?, ?>[] constants) {
+        DriveMotorsCalibration.apply(constants);
+
         for (int i = 0; i < constants.length; i++) {
             applyOffset(i, constants[i]);
         }

@@ -24,16 +24,22 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
     private final IdealizedSwerveSim sim;
     private final SwerveRequest.ApplyFieldSpeeds applyFieldSpeeds;
     private final SwerveRequest.ApplyRobotSpeeds applyRobotSpeeds;
+    private final SwerveModule.DriveRequestType driveRequestType;
 
-    public PhoenixSwerveController(SwerveDrivetrain<?, ?, ?> phoenixDrivetrain, GenericSwerveDrivetrain genericDrivetrain, IdealizedSwerveSim sim) {
+    public PhoenixSwerveController(
+            SwerveDrivetrain<?, ?, ?> phoenixDrivetrain,
+            GenericSwerveDrivetrain genericDrivetrain,
+            IdealizedSwerveSim sim,
+            SwerveModule.DriveRequestType driveRequestType) {
         this.phoenixDrivetrain = phoenixDrivetrain;
         this.genericDrivetrain = genericDrivetrain;
         this.sim = sim;
+        this.driveRequestType = driveRequestType;
 
         this.applyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds()
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+                .withDriveRequestType(driveRequestType);
         this.applyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+                .withDriveRequestType(driveRequestType);
     }
 
     @Override
