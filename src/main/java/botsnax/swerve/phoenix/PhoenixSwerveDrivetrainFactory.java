@@ -41,8 +41,8 @@ public class PhoenixSwerveDrivetrainFactory {
     protected final Consumer<SwerveDrivetrain.SwerveDriveState> logger;
     protected final DriveRequestType driveRequestType;
 
-    public PhoenixSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
-        this (mass, OpenLoopVoltage, getDefaultLogger(), drivetrainConstants, moduleConstants);
+    public PhoenixSwerveDrivetrainFactory(Mass mass, Consumer<SwerveDrivetrain.SwerveDriveState> logger, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+        this (mass, OpenLoopVoltage, logger, drivetrainConstants, moduleConstants);
     }
 
     public PhoenixSwerveDrivetrainFactory(Mass mass, DriveRequestType driveRequestType, Consumer<SwerveDrivetrain.SwerveDriveState> logger, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
@@ -53,7 +53,7 @@ public class PhoenixSwerveDrivetrainFactory {
         this.moduleConstants = moduleConstants;
     }
 
-    private static Consumer<SwerveDrivetrain.SwerveDriveState> getDefaultLogger() {
+    public static Consumer<SwerveDrivetrain.SwerveDriveState> getDefaultLogger() {
         PoseLogger poseLogger = new PoseLogger();
         return state -> poseLogger.onPoseUpdate(state.Pose);
     }

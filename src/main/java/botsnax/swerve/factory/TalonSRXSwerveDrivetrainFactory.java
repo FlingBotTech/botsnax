@@ -49,8 +49,8 @@ public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFact
         this.velocitySetter = velocitySetter;
     }
 
-    public TalonSRXSwerveDrivetrainFactory(Mass mass, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
-        this(mass, VelocitySetter.createOpenLoop(RadiansPerSecond.of(DCMotor.getKrakenX60(1).freeSpeedRadPerSec)), drivetrainConstants, moduleConstants);
+    public TalonSRXSwerveDrivetrainFactory(Mass mass, DCMotor driveMotorType, SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?> ... moduleConstants) {
+        this(mass, VelocitySetter.createOpenLoop(driveMotorType), drivetrainConstants, moduleConstants);
     }
 
     @Override
