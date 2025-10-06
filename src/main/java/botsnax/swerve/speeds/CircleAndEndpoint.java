@@ -230,11 +230,11 @@ public class CircleAndEndpoint {
         return dotProduct(point, point);
     }
 
-    public static Function<Pose2d, ChassisSpeeds> avoid(List<CircleAndEndpoint> circles, Function<Pose2d, ChassisSpeeds> speeds) {
+    public static SpeedsFunction avoid(List<CircleAndEndpoint> circles, Function<Pose2d, ChassisSpeeds> speeds) {
         return avoid(circles, speeds, null);
     }
 
-    public static Function<Pose2d, ChassisSpeeds> avoid(List<CircleAndEndpoint> circles, Function<Pose2d, ChassisSpeeds> speeds, Consumer<State> logger) {
+    public static SpeedsFunction avoid(List<CircleAndEndpoint> circles, Function<Pose2d, ChassisSpeeds> speeds, Consumer<State> logger) {
         State state = new State(circles);
 
         return pose -> {

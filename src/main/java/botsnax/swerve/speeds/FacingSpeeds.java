@@ -13,7 +13,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static botsnax.swerve.speeds.FacingSpeeds.AngularSpeedFunction.exponentialOf;
 import static edu.wpi.first.math.MathUtil.angleModulus;
@@ -162,22 +161,5 @@ public class FacingSpeeds {
                 state,
                 logger
         );
-    }
-
-    public static Function<Pose2d, ChassisSpeeds> of(Rotation2d angle, AngularVelocity maxVelocity, AngularVelocity minVelocity, Time stopTime, Time latency) {
-        double thresholdRad = minVelocity.times(latency).in(Radians);
-
-        return pose -> {
-            double delta = angleModulus(angle.getRadians() - pose.getRotation().getRadians());
-
-            if (abs(delta) > thresholdRad) {
-                double reachVelocity = delta / stopTime.in(Seconds);
-                double velocity = max(min(maxVelocity.in(RadiansPerSecond), abs(reachVelocity)), minVelocity.in(RadiansPerSecond)) * signum(reachVelocity);
-
-                return new ChassisSpeeds(0, 0, velocity);
-            } else {
-                return ZERO_SPEED;
-            }
-        };
     }
 }

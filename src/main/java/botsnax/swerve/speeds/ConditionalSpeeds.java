@@ -13,20 +13,20 @@ import java.util.function.Function;
 import static edu.wpi.first.units.Units.Meters;
 
 public class ConditionalSpeeds {
-    public static Function<Pose2d, ChassisSpeeds> ifTrue(
+    public static SpeedsFunction ifTrue(
             Function<Pose2d, Boolean> condition,
             Function<Pose2d, ChassisSpeeds> speeds) {
         return pose -> condition.apply(pose) ? speeds.apply(pose) : new ChassisSpeeds(0, 0, 0);
     }
 
-    public static Function<Pose2d, ChassisSpeeds> ifTrue(
+    public static SpeedsFunction ifTrue(
             Function<Pose2d, Boolean> condition,
             Function<Pose2d, ChassisSpeeds> trueSpeeds,
             Function<Pose2d, ChassisSpeeds> falseSpeeds) {
         return pose -> condition.apply(pose) ? trueSpeeds.apply(pose) : falseSpeeds.apply(pose);
     }
 
-    public static Function<Pose2d, ChassisSpeeds> ifNotNear(List<Pose2d> poses, Distance distance, Function<Pose2d, ChassisSpeeds> speeds) {
+    public static SpeedsFunction ifNotNear(List<Pose2d> poses, Distance distance, Function<Pose2d, ChassisSpeeds> speeds) {
         return pose -> {
             boolean isNear = false;
 

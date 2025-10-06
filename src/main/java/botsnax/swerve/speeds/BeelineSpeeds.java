@@ -14,7 +14,6 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static botsnax.swerve.speeds.CombineSpeeds.concatAndStop;
 import static edu.wpi.first.units.Units.*;
@@ -181,28 +180,5 @@ public class BeelineSpeeds {
                         logger
                 ),
                 postFacingSpeeds);
-    }
-
-    public static Function<Pose2d, ChassisSpeeds> of(Translation2d destination, LinearVelocity maxSpeed, LinearVelocity minSpeed, Time stopTime, Time latency) {
-        final double maxSpeedMPS = maxSpeed.in(MetersPerSecond);
-        final double minSpeedMPS = minSpeed.in(MetersPerSecond);
-        final double thresholdM = minSpeed.times(latency).in(Meters);
-        final double stopTimeS = stopTime.in(Seconds);
-
-        return pose -> {
-            Translation2d delta = destination.minus(pose.getTranslation());
-            double distanceM = delta.getNorm();
-            double stopSpeedMPS = distanceM / stopTimeS;
-            double speedMPS = Math.max(Math.min(maxSpeedMPS, stopSpeedMPS), minSpeedMPS);
-
-            if (distanceM > thresholdM) {
-                double vx = delta.getX() / distanceM * speedMPS;
-                double vy = delta.getY() / distanceM * speedMPS;
-
-                return new ChassisSpeeds(vx, vy, 0);
-            } else {
-                return ZERO_SPEED;
-            }
-        };
     }
 }

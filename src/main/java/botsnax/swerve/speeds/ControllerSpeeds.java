@@ -17,7 +17,7 @@ import static edu.wpi.first.wpilibj.DriverStation.getAlliance;
 import static java.lang.Math.pow;
 
 public class ControllerSpeeds {
-    public static Function<Pose2d, ChassisSpeeds> of(
+    public static SpeedsFunction of(
             Supplier<Double> vxSupplier,
             Supplier<Double> vySupplier,
             Supplier<Double> vrSupplier,
@@ -38,7 +38,7 @@ public class ControllerSpeeds {
         };
     }
 
-    public static Function<Pose2d, ChassisSpeeds> of(
+    public static SpeedsFunction of(
             XboxController controller,
             double controllerDeadband,
             LinearVelocity maxSpeed,
