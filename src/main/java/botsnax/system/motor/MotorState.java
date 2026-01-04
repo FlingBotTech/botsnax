@@ -1,12 +1,12 @@
 package botsnax.system.motor;
 
-import edu.wpi.first.units.*;
+import botsnax.control.motor.state.AngleState;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 
-public class MotorState {
+public class MotorState implements AngleState {
     private final Voltage voltage;
     private final Time time;
     private final Angle angle;
@@ -17,6 +17,11 @@ public class MotorState {
         this.time = time;
         this.angle = angle;
         this.velocity = velocity;
+    }
+
+    @Override
+    public Angle getValue() {
+        return angle;
     }
 
     public Voltage getVoltage() {

@@ -1,5 +1,6 @@
 package botsnax.system.motor.phoenix;
 
+import botsnax.control.periodic.ApplyMode;
 import botsnax.swerve.sim.PerfectSteering;
 import botsnax.system.motor.MotorSim;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
@@ -8,6 +9,7 @@ import botsnax.system.Gearbox;
 import botsnax.system.encoder.phoenix.TalonSRXAbsoluteEncoder;
 import botsnax.system.motor.AngleSetter;
 import botsnax.system.motor.MotorSystem;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -60,6 +62,9 @@ public class TalonSRXMotor implements MotorSystem {
             perfectSteering.setAngle(Radians.of(angle.getRadians()));
         }
     };
+
+    public static ApplyMode<Angle, MotorSystem> PID_APPLY_MODE = (angle, motor) ->
+            PID_CONTROL.apply(new Rotation2d(angle), motor);
 
     private final TalonSRX motor;
     private final DCMotor dcMotor;
