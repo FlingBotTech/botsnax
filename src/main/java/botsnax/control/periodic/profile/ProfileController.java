@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface ProfileController<ValueT, SystemT, StateT extends ScalarState<ValueT>>
         extends Controller<SystemT, StateT, SetpointMode<ValueT, SystemT, StateT>> {
     Optional<ValueT> getSetpoint();
+    ValueT getSetpointError();
     void setProfile(Profile<ValueT, StateT> profile, ApplyMode<ValueT, SystemT> applyMode);
 }

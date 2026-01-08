@@ -7,7 +7,7 @@ import botsnax.control.periodic.ScalarState;
 
 import java.util.Optional;
 
-public class SynchronousProfileController<ValueT, SystemT, StateT extends ScalarState<ValueT>>
+public abstract class SynchronousProfileController<ValueT, SystemT, StateT extends ScalarState<ValueT>>
         extends SynchronousController<SystemT, StateT, SetpointMode<ValueT, SystemT, StateT>>
         implements ProfileController<ValueT, SystemT, StateT> {
 
