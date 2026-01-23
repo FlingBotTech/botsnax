@@ -1,5 +1,6 @@
 package botsnax.swerve.phoenix;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -8,6 +9,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import botsnax.flywheel.Flywheel;
 import botsnax.system.motor.phoenix.TalonFXMotor;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.CAN;
 
 public class TalonFXDrive extends TalonFXMotor {
     private final SwerveModuleConstants<?, ?, ?> constants;
@@ -17,7 +19,7 @@ public class TalonFXDrive extends TalonFXMotor {
         this.constants = constants;
     }
 
-    public static Flywheel create(SwerveModuleConstants<?, ?, ?> constants, String bus) {
+    public static Flywheel create(SwerveModuleConstants<?, ?, ?> constants, CANBus bus) {
         TalonFX motor = new TalonFX(constants.DriveMotorId, bus);
         TalonFXConfiguration talonConfigs = new TalonFXConfiguration();
 

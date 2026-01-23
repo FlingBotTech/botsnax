@@ -106,7 +106,7 @@ public class PhoenixSwerveDriveSubsystem extends SubsystemBase {
 
     public Command storeEncoderOffsets() {
         Command[] commands = Arrays.stream(builder.getModuleConstants()).map(module -> {
-            try (CANcoder cancoder = new CANcoder(module.EncoderId, builder.getDrivetrainConstants().CANBusName)) {
+            try (CANcoder cancoder = new CANcoder(module.EncoderId, builder.getCanBus())) {
                 return runOnce(() -> saveOffsetToZeroCurrentPosition(getEncoderOffsetPreferenceName(module.EncoderId), cancoder));
             }
         }).toArray(Command[]::new);

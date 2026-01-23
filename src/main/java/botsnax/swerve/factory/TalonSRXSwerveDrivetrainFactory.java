@@ -17,6 +17,7 @@ import botsnax.util.PeriodicUpdater;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -85,7 +86,7 @@ public class TalonSRXSwerveDrivetrainFactory extends GenericSwerveDrivetrainFact
                 isSimulation() ?
                         PerfectSteering.createGearbox() :
                         TalonSRXSteering.create(constants, DCMotor.getVex775Pro(1)),
-                TalonFXDrive.create(constants, ""),
+                TalonFXDrive.create(constants, new CANBus()),
                 LinearAngularConversion.ofWheelRadiusGearRatio(
                         Inches.of(constants.WheelRadius),
                         constants.DriveMotorGearRatio),

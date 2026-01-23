@@ -3,6 +3,7 @@ package botsnax.swerve.phoenix;
 import botsnax.commands.calibrate.VelocityCalibration;
 import botsnax.swerve.sim.SwerveSim;
 import botsnax.util.phoenix.CANcoderUtil;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -23,6 +24,7 @@ public class PhoenixSwerveDrivetrainBuilder {
 
     private final SwerveDrivetrainConstants drivetrainConstants;
     private final SwerveModuleConstants<?, ?, ?>[] moduleConstants;
+    private final CANBus canBus;
 
     private Optional<PhoenixSwerveDrivetrain> drivetrainIfAny = Optional.empty();
 
@@ -37,6 +39,11 @@ public class PhoenixSwerveDrivetrainBuilder {
     public PhoenixSwerveDrivetrainBuilder(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants<?, ?, ?>... moduleConstants) {
         this.drivetrainConstants = driveTrainConstants;
         this.moduleConstants = moduleConstants;
+        this.canBus = new CANBus(drivetrainConstants.CANBusName);
+    }
+
+    public CANBus getCanBus() {
+        return canBus;
     }
 
     public Optional<PhoenixSwerveDrivetrain> createDrivetrain() {

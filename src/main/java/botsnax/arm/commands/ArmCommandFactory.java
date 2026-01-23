@@ -4,6 +4,7 @@ import botsnax.arm.commands.calibrate.ArmCalibrationParams;
 import botsnax.arm.commands.calibrate.CalibrateCommand;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import botsnax.commands.MotorControllerCommand;
@@ -91,9 +92,9 @@ public class ArmCommandFactory {
             Angle angle = motor.getAngle();
 
             if (angle.gt(Degrees.of(5))) {
-                goToAngle(() -> angle).schedule();
+                CommandScheduler.getInstance().schedule(goToAngle(() -> angle));
             } else {
-                park().schedule();
+                CommandScheduler.getInstance().schedule(park());
             }
         }, subsystem);
     }
