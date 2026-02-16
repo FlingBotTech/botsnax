@@ -51,6 +51,12 @@ public class PhoenixSwerveDrivetrainFactory {
         this.logger = logger;
         this.drivetrainConstants = drivetrainConstants;
         this.moduleConstants = moduleConstants;
+
+        SwerveCalibration.apply(moduleConstants);
+    }
+
+    public DriveRequestType getDriveRequestType() {
+        return driveRequestType;
     }
 
     public static Consumer<SwerveDrivetrain.SwerveDriveState> getDefaultLogger() {
@@ -59,8 +65,6 @@ public class PhoenixSwerveDrivetrainFactory {
     }
 
     public SwerveController create() {
-        SwerveCalibration.apply(moduleConstants);
-
         SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain = new SwerveDrivetrain<>(
                 TalonFX::new,
                 TalonFX::new,
@@ -87,13 +91,11 @@ public class PhoenixSwerveDrivetrainFactory {
                     new Gearbox(
                             new TalonFXMotor(
                                     drivetrain.getModule(i).getSteerMotor(),
-                                    constants.SteerMotorInverted,
                                     dcMotor),
                             new CANcoderEncoder(drivetrain.getModule(i).getEncoder())
                     ),
                     new TalonFXMotor(
                             drivetrain.getModule(i).getDriveMotor(),
-                            constants.DriveMotorInverted,
                             dcMotor),
                     LinearAngularConversion.ofWheelRadiusGearRatio(
                             Meters.of(moduleConstants[i].WheelRadius),

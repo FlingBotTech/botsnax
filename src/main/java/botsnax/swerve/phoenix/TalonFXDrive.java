@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj.CAN;
 public class TalonFXDrive extends TalonFXMotor {
     private final SwerveModuleConstants<?, ?, ?> constants;
 
-    public TalonFXDrive(TalonFX motor, boolean inverted, SwerveModuleConstants<?, ?, ?> constants) {
-        super(motor, inverted, DCMotor.getKrakenX60(1));
+    public TalonFXDrive(TalonFX motor, SwerveModuleConstants<?, ?, ?> constants) {
+        super(motor, DCMotor.getKrakenX60(1));
         this.constants = constants;
     }
 
@@ -37,6 +37,6 @@ public class TalonFXDrive extends TalonFXMotor {
                     "TalonFX ID " + motor.getDeviceID() + " failed config with error " + response.toString());
         }
 
-        return new TalonFXDrive(motor, constants.DriveMotorInverted, constants);
+        return new TalonFXDrive(motor, constants);
     }
 }

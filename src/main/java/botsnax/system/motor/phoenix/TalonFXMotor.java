@@ -51,53 +51,28 @@ public class TalonFXMotor implements MotorSystem {
     }
 
     private final TalonFX motor;
-    private final double invert;
     private final Sim sim;
     private final DCMotor dcMotor;
 
-    public TalonFXMotor(TalonFX motor, boolean inverted) {
-        this(motor, inverted, DCMotor.getKrakenX60(1));
+    public TalonFXMotor(TalonFX motor) {
+        this(motor, DCMotor.getKrakenX60(1));
     }
 
-    public TalonFXMotor(TalonFX motor, boolean inverted, DCMotor dcMotor) {
+    public TalonFXMotor(TalonFX motor, DCMotor dcMotor) {
         this.motor = motor;
 
         if (isSimulation()) {
-            setInverted(inverted);
             sim = new Sim();
         } else {
             sim = null;
         }
 
-        boolean motorInverted = getInverted();
-
-        if (inverted != motorInverted) {
-            System.err.println("WARNING: TalonFX " + motor.getDeviceID() + " inversion config does not match code. Emulating inversion.");
-        }
-
-        this.invert = (inverted != motorInverted) ? -1 : 1;
         this.dcMotor = dcMotor;
     }
 
     @Override
     public DCMotor getDCMotor() {
         return dcMotor;
-    }
-
-    private void setInverted(boolean inverted) {
-        MotorOutputConfigs configs = new MotorOutputConfigs();
-
-        throwFail(motor.getConfigurator().refresh(configs), "get configuration");
-        configs.Inverted = inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
-        throwFail(motor.getConfigurator().apply(configs), "set inverted");
-    }
-
-    private boolean getInverted() {
-        MotorOutputConfigs configs = new MotorOutputConfigs();
-
-        throwFail(motor.getConfigurator().refresh(configs), "get configuration");
-
-        return configs.Inverted == InvertedValue.Clockwise_Positive;
     }
 
     private void throwFail(StatusCode statusCode, String operation) {
@@ -133,22 +108,22 @@ public class TalonFXMotor implements MotorSystem {
 
     @Override
     public Angle getAngle() {
-        return motor.getPosition().getValue().times(invert);
+        return motor.getPosition().getValue();
     }
 
     @Override
     public AngularVelocity getVelocity() {
-        return motor.getRotorVelocity().getValue().times(invert);
+        return motor.getRotorVelocity().getValue();
     }
 
     @Override
     public Voltage getVoltage() {
-        return motor.getMotorVoltage().getValue().times(invert);
+        return motor.getMotorVoltage().getValue();
     }
 
     @Override
     public void setVoltage(Voltage voltage) {
-        motor.setVoltage(voltage.times(invert).baseUnitMagnitude());
+        motor.setVoltage(voltage.in(Volts));
     }
 
     @Override
@@ -158,7 +133,7 @@ public class TalonFXMotor implements MotorSystem {
 
     @Override
     public void setAngle(Angle angle) {
-        PhoenixUtil.setAndValidatePosition(motor, angle.times(invert));
+        PhoenixUtil.setAndValidatePosition(motor, angle);
     }
 
     public static VelocitySetter getVelocityVoltageSetter() {

@@ -4,6 +4,7 @@ import botsnax.swerve.GenericSwerveDrivetrain;
 import botsnax.swerve.SwerveController;
 import botsnax.swerve.sim.IdealizedSwerveSim;
 import botsnax.vision.PoseEstimate;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -100,6 +101,9 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
 
     @Override
     public void addVisionMeasurement(PoseEstimate estimate) {
-        phoenixDrivetrain.addVisionMeasurement(estimate.pose(), estimate.timestamp().in(Seconds), estimate.stdDevs());
+        phoenixDrivetrain.addVisionMeasurement(
+                estimate.pose(),
+                Utils.fpgaToCurrentTime(estimate.timestamp().in(Seconds)),
+                estimate.stdDevs());
     }
 }

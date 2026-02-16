@@ -56,12 +56,14 @@ public class FacingSpeeds {
     }
 
     public interface StopFunction {
-        boolean isStopped(Pose2d pose, double velocityRadPS, double deltaRad);
+        boolean isStopped(Pose2d pose, double velocityRadPS, double deltaRad, State state);
 
         static FacingSpeeds.StopFunction of(AngularVelocity maxStopSpeed, Angle threshold) {
-            return (pose, velocityRadPS, deltaRad) ->
-                    (velocityRadPS < maxStopSpeed.in(RadiansPerSecond)) &&
-                            (abs(deltaRad) < threshold.in(Radians));
+            return (pose, velocityRadPS, deltaRad, state) -> {
+                state.thresholdDeg = threshold.in(Degrees);
+                return (velocityRadPS < maxStopSpeed.in(RadiansPerSecond)) &&
+                        (abs(deltaRad) < threshold.in(Radians));
+            };
         }
     }
 
@@ -116,7 +118,7 @@ public class FacingSpeeds {
             Rotation2d angle = angleFunction.getAngle(pose);
             double delta = angleModulus(angle.getRadians() - pose.getRotation().getRadians());
             double velocityRadPS = speedFunction.getSpeedRadPS(delta);
-            boolean stop = stopFunction.isStopped(pose, velocityRadPS, delta);
+            boolean stop = stopFunction.isStopped(pose, velocityRadPS, delta, state);
             ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0, 0, velocityRadPS);
 
             state.distanceDeg = abs(delta * 180) / Math.PI;
@@ -140,7 +142,7 @@ public class FacingSpeeds {
         return FacingSpeeds.of(
                 angleFunction,
                 speedFunction,
-                (pose, velocityRadPS, deltaRad) -> false,
+                (pose, velocityRadPS, deltaRad, stateValue) -> false,
                 state,
                 logger
         );
