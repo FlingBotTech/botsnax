@@ -21,4 +21,11 @@ public record PoseStdDev(Distance xStdDev, Distance yStdDev, Angle rStdDev) {
                 rStdDev.in(Radians)
         });
     }
+
+    public static PoseStdDev of(Matrix<N3, N1> matrix) {
+        return new PoseStdDev(
+                Meters.of(matrix.get(0, 0)),
+                Meters.of(matrix.get(1, 0)),
+                Radians.of(matrix.get(2, 0)));
+    }
 }

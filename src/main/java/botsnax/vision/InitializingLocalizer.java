@@ -19,6 +19,9 @@ public class InitializingLocalizer implements Consumer<PoseEstimate> {
         this.poseEstimateConsumer = poseEstimateConsumer;
     }
 
+    public boolean isInitialized() {
+        return initialized;
+    }
 
     @Override
     public void accept(PoseEstimate poseEstimate) {
