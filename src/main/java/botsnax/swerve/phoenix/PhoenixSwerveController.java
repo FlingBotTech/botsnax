@@ -58,6 +58,11 @@ public class PhoenixSwerveController implements SwerveController, Subsystem {
     }
 
     @Override
+    public ChassisSpeeds getChassisSpeeds() {
+        return phoenixDrivetrain.getState().Speeds;
+    }
+
+    @Override
     public Pose2d getSimPose() {
         return sim.getPose();
     }

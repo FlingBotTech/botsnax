@@ -46,4 +46,9 @@ public class PigeonGyro implements Gyro {
     public Rotation2d getHeading() {
         return fromRadians(getLatencyCompensatedValue(pigeon.getYaw(), pigeon.getAngularVelocityZWorld()).in(Radians));
     }
+
+    @Override
+    public AngularVelocity getVelocity() {
+        return pigeon.getAngularVelocityZWorld().getValue();
+    }
 }

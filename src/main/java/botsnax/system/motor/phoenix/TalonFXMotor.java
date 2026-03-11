@@ -7,10 +7,10 @@ import botsnax.system.motor.VelocitySetter;
 import botsnax.util.phoenix.PhoenixUtil;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -54,6 +54,9 @@ public class TalonFXMotor implements MotorSystem {
     private final Sim sim;
     private final DCMotor dcMotor;
 
+    private final VoltageOut voltageOut;
+    private final NeutralOut neutralOut;
+
     public TalonFXMotor(TalonFX motor) {
         this(motor, DCMotor.getKrakenX60(1));
     }
@@ -68,6 +71,8 @@ public class TalonFXMotor implements MotorSystem {
         }
 
         this.dcMotor = dcMotor;
+        this.voltageOut = new VoltageOut(Volts.zero());
+        this.neutralOut = new NeutralOut();
     }
 
     @Override
@@ -123,12 +128,12 @@ public class TalonFXMotor implements MotorSystem {
 
     @Override
     public void setVoltage(Voltage voltage) {
-        motor.setVoltage(voltage.in(Volts));
+        motor.setControl(voltageOut.withOutput(voltage));
     }
 
     @Override
     public void stop() {
-        motor.stopMotor();
+        motor.setControl(neutralOut);
     }
 
     @Override

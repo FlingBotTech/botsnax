@@ -20,7 +20,9 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Mass;
+import jdk.jshell.spi.ExecutionControl;
 
+import javax.naming.OperationNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -136,6 +138,11 @@ public abstract class GenericSwerveDrivetrainFactory {
             @Override
             public Pose2d getPose() {
                 return poseLogger.getPose();
+            }
+
+            @Override
+            public ChassisSpeeds getChassisSpeeds() {
+                throw new RuntimeException("Not implemented yet");
             }
 
             @Override

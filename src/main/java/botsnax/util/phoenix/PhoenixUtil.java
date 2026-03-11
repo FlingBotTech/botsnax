@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.measure.Angle;
@@ -42,7 +43,7 @@ public class PhoenixUtil {
         validateSignalValue(encoder.getPosition(), positionValue);
     }
 
-    public static void setAndValidatePosition(TalonFX motor, Angle position) {
+    public static void setAndValidatePosition(CommonTalon motor, Angle position) {
         double positionValue = position.in(Rotations);
         StatusCode status = motor.setPosition(positionValue);
 
